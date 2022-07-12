@@ -1,5 +1,7 @@
 BootStrap: docker
 From: nginx
 
-%runscript
+#%runscript
+#   nginx
+%startscript
     nginx
