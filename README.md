@@ -1,5 +1,5 @@
 操作系统Linux
-使用singularity打包开发环境，详细信息可以参考https://docs.sylabs.io/guides/3.10/user-guide/index.html
+使用singularity打包开发环境，详细信息可以参考https://docs.sylabs.io/guides/3.10/user-guide/index.html 
 此处singularity不是必须的，如果没有安装singularity可以自行配置网络服务器（如nginx）程序。
 
 代码运行步骤如下：
