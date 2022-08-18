@@ -9,3 +9,5 @@
 3. 用浏览器访问localhost
 
 当前的代码没有使用开发框架，全部基于基本的css, html, javascript编写。
+
+vscode
