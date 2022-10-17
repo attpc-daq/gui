@@ -60,20 +60,37 @@
 	pattern.focus();
 	
     }
-    function execOne(){
+    async function execOne(){
 	pattern = doc.getElementById('patternContent');
 	line=getLineNumber(pattern);
 	arrayOfLines = pattern.value.split('\n');
-	wsSend(arrayOfLines[line-1]);
-	document.getElementById("message").value = arrayOfLines[line-1];
+    lineStr = arrayOfLines[line-1];
+    if(lineStr[0]!='#'){
+        wsSend(arrayOfLines[line-1]);
+        document.getElementById("message").value = arrayOfLines[line-1];
+    }else{
+        lineContent = lineStr.split(' ');
+        if(lineContent[0]=='#sleep'){
+            await new Promise(r => setTimeout(r, lineContent[1]));
+        }
+    }
 	focusLine(line+1);
     }
     async function execAll(){
 	if(doc.getElementById('execAll').disabled==true) return;
 	arrayOfLines = $('#patternContent').val().split('\n');
 	for(let i =0;i<arrayOfLines.length;i++){
-	    wsSend(arrayOfLines[i]);
+	    //wsSend(arrayOfLines[i]);
 	    //await new Promise(r => setTimeout(r, 200));
+        lineStr = arrayOfLines[i];
+        if(lineStr[0]!='#'){
+            wsSend(arrayOfLines[i]);
+        }else{
+            lineContent = lineStr.split(' ');
+            if(lineContent[0]=='#sleep'){
+                await new Promise(r => setTimeout(r, lineContent[1]));
+            }
+        }
 	}
     }
     function inputs(e){
