@@ -41,10 +41,7 @@
 	document.getElementById("message").value = arrayOfLines[line-1];
     }
     function getLineNumber(textarea) {
-	return textarea.value.substr(0, textarea.selectionStart)
-	    .split("\n")
-	    .map((line) => 1 + Math.floor(line.length / textarea.cols))
-	    .reduce((a, b) => a + b, 0);
+        return textarea.value.substr(0, textarea.selectionStart).split('\n').length;        
     };
     function focusLine(lineNumber){
 	pattern = doc.getElementById('patternContent');
@@ -58,7 +55,7 @@
 	}
 	pattern.setSelectionRange(pos0,pos1);
 	pattern.focus();
-	
+	document.getElementById("message").value = arrayOfLines[lineNumber-1];
     }
     async function execOne(){
 	pattern = doc.getElementById('patternContent');
@@ -78,12 +75,12 @@
     }
     async function execAll(){
 	if(doc.getElementById('execAll').disabled==true) return;
-	arrayOfLines = $('#patternContent').val().split('\n');
-	for(let i =0;i<arrayOfLines.length;i++){
-	    //wsSend(arrayOfLines[i]);
-	    //await new Promise(r => setTimeout(r, 200));
+    oExecButton.setAttribute('disabled',true)
+    arrayOfLines = $('#patternContent').val().split('\n');
+    for(let i =0;i<arrayOfLines.length;i++){
         lineStr = arrayOfLines[i];
         if(lineStr[0]!='#'){
+            focusLine(i+1);
             wsSend(arrayOfLines[i]);
         }else{
             lineContent = lineStr.split(' ');
@@ -91,7 +88,10 @@
                 await new Promise(r => setTimeout(r, lineContent[1]));
             }
         }
-	}
+    }
+    oExecButton.setAttribute('disabled',false)
+    doc.getElementById("execAll").disabled=false;
+    return
     }
     function inputs(e){
       if(doc.getElementById('send').disabled==true) return
