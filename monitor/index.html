@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link type="text/css" rel="stylesheet" href="css/DAQ.css">
   <script src="js/jquery-1.11.1.min.js"></script>
+  <script src="https://root.cern/js/latest/build/jsroot.js"></script>
   <title>Document</title>
 </head>
 <body id="body">
@@ -15,8 +16,36 @@
 	        <input id="ip" type="text" placeholder="IP">
 	        <input id="port" type="text" placeholder="port">
 	        <button id="connect">连接</button>
+	        <button id="update">刷新</button>
+          <label for="ROOTObjectName">QAList:</label>
+          <select id="ROOTObjectName"></select>
+          <label for="drawOption">绘图选项：</label>
+          <select id="drawOption">
+            <option value="AL">AL</option>
+            <option value="A PLC">A PLC</option>
+            <option value="A PMC plc">A PMC PLC</option>
+            <option value="BOX">BOX</option>
+            <option value="BOXZ">BOXZ</option>
+            <option value="BOX1">BOX1</option>
+            <option value="COLZ">COLZ</option>
+            <option value="CONT">CONT</option>
+            <option value="CONTZ">CONTZ</option>
+            <option value="CONT0">CONT0</option>
+            <option value="CONT1">CONT1</option>
+            <option value="CONT2">CONT2</option>
+            <option value="CONT3">CONT3</option>
+            <option value="LEGO">LEGO</option>
+            <option value="LEGO1">LEGO1</option>
+            <option value="LEGO2">LEGO2</option>
+            <option value="SURF">SURF</option>
+            <option value="SURF1">SURF1</option>
+            <option value="SURF2">SURF2</option>
+            <option value="SURF3">SURF3</option>
+          </select>
+          <label for="autoRefresh">自动刷新：</label>
+          <input id="autoRefresh" type="checkbox">
         </div>
-	    <textarea id="messages" disabled=true></textarea>
+	      <div id='drawing'></div>
     </div>
   <script src="./js/index.js"></script>
 </body>

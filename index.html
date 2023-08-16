@@ -13,30 +13,30 @@
     <div id="leftPannel" class='pad'>
       <p/>
       <div class='title'>
-	<button onclick="document.getElementById('fileSelector').click()" >读取文件</button>
-	<input type="file" id="fileSelector" style="visibility:hidden;"/>
+	      <button onclick="document.getElementById('fileSelector').click()" >读取文件</button>
+	      <input type="file" id="fileSelector" style="visibility:hidden;"/>
       </div>
       <div>
-	<textarea id="patternContent"></textarea>
+	      <textarea id="patternContent"></textarea>
       </div>
       <div class='title'>
-	<button id="execOne" disabled=true>执行单行</button>
-	<button id="execAll">执行全部</button>
+	      <button id="execOne" disabled=true>执行单行</button>
+	      <button id="exec" disabled=true>逐行执行</button>
       </div>
     </div>
     <div id="rightPannel" class='pad'>
       <div class='title'>
-	<ul id="list"></ul>
-	<input id="ip" type="text" placeholder="IP">
-	<input id="port" type="text" placeholder="port">
-	<button id="connect">连接</button>
+	      <ul id="list"></ul>
+	      <input id="ip" type="text" placeholder="IP">
+	      <input id="port" type="text" placeholder="port">
+	      <button id="connect">连接</button>
       </div>
       <div>
-	<textarea id="messages" disabled=true></textarea>
+	      <textarea id="messages" disabled=true></textarea>
       </div>
       <div class='title'>
-      <input id="message" type="text" placeholder="请输入命令">
-      <button id="send">发送</button>
+        <input id="message" type="text" placeholder="请输入命令">
+        <button id="send">发送</button>
       </div>
     </div>
   </div>
