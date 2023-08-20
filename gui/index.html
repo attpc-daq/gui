@@ -10,16 +10,9 @@
 </head>
 <body id="body">
   <div id="main">
-    <div class="expandable" id="FEE">
+    <div class="expandable" id="Host">
         <div class="header">
-            <div class="title">电子学</div>
-            <button id="FEE_server_connect">连接主机</button>
-            <button id="FEE_server_shutdown">关闭主机</button>
-            <button id="FEE_server_disconnect">断开连接</button>
-            <button id="FEE_data_start">数据开始</button>
-		    <button id="FEE_data_stop">数据停止</button>
-            <button id="FEE_setup">采集配置</button>
-            <button id="FEE_selftrigger">噪声测试</button>
+            <div class="title">主机</div>
             <div class="toggle">
                 <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
             </div>
@@ -27,22 +20,59 @@
         <div class="content">
             <div>
                 <span>主机网址:</span>
-                <input type="text" placeholder="主机地址" id="FEE_Net_IP">
-		        <input type="text" placeholder="端口" id="FEE_Net_Port">
+                <input type="text" placeholder="主机地址" id="Host_IP">
+		        <input type="text" placeholder="端口" id="Host_Port">
             </div>
+        </div>
+    </div>
+    <div class="expandable" id="FEE">
+        <div class="header">
+            <div class="title">电子学</div>
+            <button id="FEE_init">初始化</button>
+            <button id="FEE_data_start">数据开始</button>
+		    <button id="FEE_data_stop">数据停止</button>
+            <button id="FEE_setup">采集配置</button>
+            <button id="FEE_selftrigger">噪声测试</button>
+            <button id="FEE_start_decoder">打开解码器</button>
+            <button id="FEE_stop_decoder">关闭解码器</button>
+            <span>Data Rate : </span>
+            <span id="DAQ1_dataRate" class="number" style="color:blue"></span>
+            <span>|</span>
+            <span id="DAQ2_dataRate" class="number" style="color:blue"></span>
+            <span> (MB/s)</span>
+            <span> Decoder Threading: </span>
+            <span id="DAQ1_nTask" class="number" style="color:blue"></span>
+            <span>|</span>
+            <span id="DAQ2_nTask" class="number" style="color:blue"></span>
+            <div class="toggle">
+                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
+            </div>
+        </div>
+        <div class="content">
             <div>
                 <span>电子学网址: </span>
-                <input type="text" placeholder="SiTCP地址1">
-		        <input type="text" placeholder="端口1">
-                <button type="button" id="sitcp1_enable">启用</button>
-                <button type="button" id="sitcp1_disable">关闭</button>
+                <input type="text" placeholder="SiTCP地址1" id="FEE1_addr">
+		        <input type="text" placeholder="端口1" id="FEE1_port">
             </div>
             <div>
+                <span>缓存文件位置: </span>
+                <input type="text" placeholder="文件存储位置" id="FEE1_bufferPath" style="margin-bottom: 5px;width: 500px;">
+            </div>
+            
+            <div>
                 <span>电子学网址: </span>
-                <input type="text" placeholder="SiTCP地址2">
-		        <input type="text" placeholder="端口2">
-                <button type="button" id="sitcp2_enable">启用</button>
-                <button type="button" id="sitcp2_disable">关闭</button>
+                <input type="text" placeholder="SiTCP地址2" id="FEE2_addr">
+		        <input type="text" placeholder="端口2" id="FEE2_port">
+            </div>
+            <div>
+                <span>缓存文件位置: </span>
+                <input type="text" placeholder="文件存储位置" id="FEE2_bufferPath" style="margin-bottom: 5px;width: 500px;">
+            </div>
+            <div>
+                <span>缓存文件大小: </span>
+                <input type="text" placeholder="文件大小" id="FEE_bufferSize" style="margin-bottom: 5px;">
+                <span>(Bytes) </span>
+                <button id="FEE_setBufferSize">Update</button>
             </div>
             <div>
                 <span>压缩阈值: </span>
@@ -68,90 +98,10 @@
         </div>
     </div>
 
-    <div class="expandable" id="DAQ1">
-        <div class="header">
-            <div class="title">数据获取一</div>
-            <button id="DAQ1_server_connect">连接主机</button>
-            <button id="DAQ1_server_shutdown">关闭主机</button>
-            <button id="DAQ1_server_disconnect">断开连接</button>
-            <button id="DAQ1_init">初始化</button>
-		    <button id="DAQ1_start">运行</button>
-		    <button id="DAQ1_stop">停止</button>
-            <button id="DAQ1_start_decoder">打开解码器</button>
-            <button id="DAQ1_stop_decoder">关闭解码器</button>
-            <span>Data Rate : </span>
-            <span id="DAQ1_dataRate" class="number" style="color:blue"></span>
-            <span> MB/s</span>
-            <span>Running Tasks: </span>
-            <span id="DAQ1_nTask" class="number" style="color:blue"></span>
-            <div class="toggle">
-                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
-            </div>
-        </div>
-        <div class="content">
-            <div>
-                <span>主机网址:</span>
-                <input type="text" placeholder="主机地址">
-		        <input type="text" placeholder="端口">
-            </div>
-            <!-- <input type="text" placeholder="socket缓冲区大小"> -->
-            <div>
-                <span>缓存文件大小: </span>
-                <input type="text" placeholder="文件大小"  style="margin-bottom: 5px;">
-                <span>(Bytes) </span>
-                <button id="DAQ1_buffersize">Update</button>
-            </div>
-            <div>
-                <span>缓存文件位置: </span>
-                <input type="text" placeholder="文件存储位置"  style="margin-bottom: 5px;width: 500px;">
-            </div>
-        </div>
-    </div>
-
-    <div class="expandable" id="DAQ2">
-        <div class="header">
-            <div class="title">数据获取二</div>
-            <button id="DAQ2_server_connect">连接主机</button>
-            <button id="DAQ2_server_shutdown">关闭主机</button>
-            <button id="DAQ2_server_disconnect">断开连接</button>
-            <button id="DAQ2_init">初始化</button>
-		    <button id="DAQ2_start">运行</button>
-		    <button id="DAQ2_stop">停止</button>
-            <button id="DAQ2_start_decoder">打开解码器</button>
-            <button id="DAQ2_stop_decoder">关闭解码器</button>
-            <span>Data Rate : </span>
-            <span id="dataRate" class="number" style="color:blue"></span>
-            <span> Mb/s</span>
-            <span>Running Tasks: </span>
-            <span id="nTask" class="number" style="color:blue"></span>
-            <div class="toggle">
-                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
-            </div>
-        </div>
-        <div class="content">
-            <div>
-                <span>主机网址:</span>
-                <input type="text" placeholder="主机地址">
-		        <input type="text" placeholder="端口">
-            </div>
-            <!-- <input type="text" placeholder="socket缓冲区大小"> -->
-            <div>
-                <span>文件大小: </span>
-                <input type="text" placeholder="文件大小"  style="margin-bottom: 5px;">
-            </div>
-            <div>
-                <span>文件存储位置: </span>
-                <input type="text" placeholder="文件存储位置"  style="margin-bottom: 5px;width: 500px;">
-            </div>
-        </div>
-    </div>
-
     <div class="expandable" id="RawEventProcessor">
         <div class="header">
             <div class="title">数据处理</div>
-            <button id="DP_server_connect">连接主机</button>
-            <button id="DP_server_shutdown">关闭主机</button>
-            <button id="DP_server_disconnect">断开连接</button>
+
             <button id="DP_init">初始化</button>
 		    <button id="DP_start">运行</button>
 		    <button id="DP_stop">停止</button>
@@ -167,6 +117,15 @@
         </div>
         <div class="content">
             <div>
+                <span>RawData接收端口:</span>
+                <input id="DP_HostPort" type="text" placeholder="端口">
+            </div>
+            <div>
+                <span>Event发送端口:</span>
+                <input id="QA_HostPort" type="text" placeholder="端口">
+            </div>
+            <div>
+                
                 <button id="DP_ParameterButton">生成参数文件</button>
                 <input id="DP_ParameterEventsInput" type="text" placeholder="number of events" style="margin-bottom: 5px;width: 150px;">
                 <span id="DP_ParameterEvents" class="number" style="color:blue"></span>
@@ -246,53 +205,19 @@
             </div>
             <div>
                 <span>单文件事件数: </span>
-                <input type="text" placeholder="单文件事件数"  style="margin-bottom: 5px;">
+                <input id="eventsPerFile" type="text" placeholder="单文件事件数"  style="margin-bottom: 5px;">
             </div>
             <div>
                 <span>文件存储位置: </span>
-                <input type="text" placeholder="文件存储位置"  style="margin-bottom: 5px;width: 500px;">
+                <input id="storageDir" type="text" placeholder="文件存储位置"  style="margin-bottom: 5px;width: 500px;">
             </div>
         </div>
     </div>
 
-    <!-- <div class="expandable" id="ParameterProcessor">
-        <div class="header">
-            <div class="title">参数生成</div>
-            <button>初始化</button>
-		    <button>运行</button>
-		    <button>停止</button>
-            
-            <div class="toggle">
-                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
-            </div>
-        </div>
-        <div class="content">
-            <input type="text" placeholder="文件存储位置">
-        </div>
-    </div> -->
-
-    <!-- <div class="expandable" id="EventProcessor">
-        <div class="header">
-            <div class="title">事件生成</div>
-            <button>初始化</button>
-		    <button>运行</button>
-		    <button>停止</button>
-            
-            <div class="toggle">
-                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
-            </div>
-        </div>
-        <div class="content">
-            <input type="text" placeholder="文件存储位置">
-        </div>
-    </div> -->
-
     <div class="expandable" id="QAProcessor">
         <div class="header">
             <div class="title">数据监测</div>
-            <button id="QA_server_connect">连接主机</button>
-            <button id="QA_server_shutdown">关闭主机</button>
-            <button id="QA_server_disconnect">断开连接</button>
+
             <button id="QA_init">初始化</button>
 		    <button id="QA_start">运行</button>
 		    <button id="QA_stop">停止</button>
@@ -305,9 +230,8 @@
         </div>
         <div class="content">
             <div>
-                <span>网络设置:</span>
-                <input type="text" placeholder="主机地址">
-		        <input type="text" placeholder="端口">
+                <span>HttpServerPort:</span>
+		        <input type="text" id="HttpServerPort" placeholder="端口">
             </div>
             <iframe class="frame" id="QAFrame" src="http://10.155.101.208:8008/"></iframe>
         </div>
