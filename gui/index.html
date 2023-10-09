@@ -22,13 +22,18 @@
                 <span>主机网址:</span>
                 <input type="text" placeholder="主机地址" id="Host_IP">
 		        <input type="text" placeholder="端口" id="Host_Port">
+                <button id="shutdown">关闭主机程序</button>
             </div>
         </div>
     </div>
     <div class="expandable" id="FEE">
         <div class="header">
             <div class="title">电子学</div>
+            <button id="FEE_connect">连接</button>
             <button id="FEE_init">初始化</button>
+            <button id="FEE_shutdown">关闭</button>
+            <button id="FEE_start">运行</button>
+		    <button id="FEE_stop">停止</button>
             <button id="FEE_data_start">数据开始</button>
 		    <button id="FEE_data_stop">数据停止</button>
             <button id="FEE_setup">采集配置</button>
@@ -36,14 +41,14 @@
             <button id="FEE_start_decoder">打开解码器</button>
             <button id="FEE_stop_decoder">关闭解码器</button>
             <span>Data Rate : </span>
-            <span id="DAQ1_dataRate" class="number" style="color:blue"></span>
-            <span>|</span>
-            <span id="DAQ2_dataRate" class="number" style="color:blue"></span>
+            <span id="DAQ1_dataRate" class="number" style="color:blue">-</span>
+            <span>:</span>
+            <span id="DAQ2_dataRate" class="number" style="color:blue">-</span>
             <span> (MB/s)</span>
             <span> Decoder Threading: </span>
-            <span id="DAQ1_nTask" class="number" style="color:blue"></span>
-            <span>|</span>
-            <span id="DAQ2_nTask" class="number" style="color:blue"></span>
+            <span id="DAQ1_nTask" class="number" style="color:blue">-</span>
+            <span>:</span>
+            <span id="DAQ2_nTask" class="number" style="color:blue">-</span>
             <div class="toggle">
                 <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
             </div>
@@ -72,7 +77,6 @@
                 <span>缓存文件大小: </span>
                 <input type="text" placeholder="文件大小" id="FEE_bufferSize" style="margin-bottom: 5px;">
                 <span>(Bytes) </span>
-                <button id="FEE_setBufferSize">Update</button>
             </div>
             <div>
                 <span>压缩阈值: </span>
@@ -81,49 +85,57 @@
                 <span id="thresholdprocess"></span>
             </div>
             <div>
-                <span>斜率阈值: </span>
-                <input type="text" placeholder="hex:0x0020 斜率阈值">
-                <button type="button" id="slope">Set</button>
+                <span>触发斜率: </span>
+                <input type="text" id="slope" placeholder="hex:0x0020 触发斜率">
+                <!-- <button type="button" id="slope">Set</button> -->
             </div>
             <div>
                 <span>符合通道: </span>
-                <input type="text" placeholder="hex:0x0004 符合通道">
-                <button type="button" id="nchannel">Set</button>
+                <input type="text" id="nchannel" placeholder="hex:0x0004 符合通道">
+                <!-- <button type="button" id="nchannel">Set</button> -->
             </div>
             <div>
-                <span>触发模式: </span>
-                <input type="text" placeholder="hex:0x0001 触发模式">
-                <button type="button" id="hit_mode">Set</button>
-            </div>
+                <label for="T0_check">是否开启T0: </label>
+                <input id="T0_check" type="checkbox">
+                <label for="T0_type">T0模式：</label>
+                <select id="T0_type" disabled>
+                  <option value="external">external</option>
+                  <option value="self-T0">self-T0</option>
+                </select>
+                <span>self-T0频率(Hz): </span>
+                <input type="text" placeholder="self-T0频率，比如50，单位Hz" disabled>
+                <span>T0之后开始响应hit的时间(ns): </span>
+                <input type="text" placeholder="开始响应hit的时间，单位ns" disabled>
+                <span>T0之后停止响应hit的时间(ns): </span>
+                <input type="text" placeholder="停止响应hit的时间，单位ns" disabled>
+                <button type="button" id="T0_button" disabled>Set</button>
+              </div>
         </div>
     </div>
 
     <div class="expandable" id="RawEventProcessor">
         <div class="header">
             <div class="title">数据处理</div>
-
+            <button id="DP_connect">连接</button>
             <button id="DP_init">初始化</button>
+            <button id="DP_shutdown">关闭</button>
 		    <button id="DP_start">运行</button>
 		    <button id="DP_stop">停止</button>
             
-            <span>Event Rate : </span>
-            <span id="eventRate" class="number" style="color:blue"></span>
-            <span> Events/s</span>
-            <span> RawEvent Files : </span>
-            <span id="raweventFiles" class="number" style="color:blue"></span>
+            <span>Total Event : </span>
+            <span id="DPTotalEvent" class="number" style="color:blue"></span>
+            <span> Current Event ID : </span>
+            <span id="DPCurrentEventID" class="number" style="color:blue"></span>
+            <span> Rate : </span>
+            <span id="DPEventRate" class="number" style="color:blue"></span>
+            <span> Hz </span>
+            <span> Current Output File ID : </span>
+            <span id="outputFileID" class="number" style="color:blue"></span>
             <div class="toggle">
                 <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
             </div>
         </div>
         <div class="content">
-            <div>
-                <span>RawData接收端口:</span>
-                <input id="DP_HostPort" type="text" placeholder="端口">
-            </div>
-            <div>
-                <span>Event发送端口:</span>
-                <input id="QA_HostPort" type="text" placeholder="端口">
-            </div>
             <div>
                 
                 <button id="DP_ParameterButton">生成参数文件</button>
@@ -136,13 +148,6 @@
                 <button id="DP_stop_rawevent">关闭RawEvent存储</button>
                 <button id="DP_start_event">打开Event存储</button>
                 <button id="DP_stop_event">关闭Event存储</button>
-                <button id="DP_start_QAData">打开QA数据端口</button>
-                <button id="DP_stop_QAData">关闭QA数据端口</button>
-            </div>
-            <div>
-                <span>网络设置:</span>
-                <input id="DP_Net_IP" type="text" placeholder="主机地址">
-		        <input id="DP_Net_Port" type="text" placeholder="端口">
             </div>
             <div>
                 <span>气体平均电离能: </span>
@@ -217,13 +222,18 @@
     <div class="expandable" id="QAProcessor">
         <div class="header">
             <div class="title">数据监测</div>
-
+            <button id="QA_connect">连接</button>
             <button id="QA_init">初始化</button>
+            <button id="QA_shutdown">关闭</button>
 		    <button id="QA_start">运行</button>
 		    <button id="QA_stop">停止</button>
-            <span>Event Rate : </span>
+            <span>Total Event : </span>
+            <span id="QATotalEvent" class="number" style="color:blue"></span>
+            <span>Current Event ID : </span>
+            <span id="QACurrentEventID" class="number" style="color:blue"></span>
+            <span> Rate : </span>
             <span id="QAEventRate" class="number" style="color:blue"></span>
-            <span> Events/s</span>
+            <span> Hz </span>
             <div class="toggle">
                 <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
             </div>
@@ -237,41 +247,19 @@
         </div>
     </div>
 
-    <div class="expandable" id="MessageArea">
-        <div class="header">
-            <div class="title">输出信息</div>
-            <div class="toggle">
-                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
-            </div>
-        </div>
-        <div class="content">
-            <textarea id="messages" class="messagearea"></textarea>
-        </div>
-    </div>
-
     <div class="expandable" id="Log">
         <div class="header">
             <div class="title">实验记录</div>
+            <button id="log_connect">连接</button>
+            <button id="createLog">新建</button>
             <div class="toggle">
                 <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
             </div>
         </div>
         <div class="content">
-            <input type="text" placeholder="保存位置">
-		    <button>显示</button>
-            <button id="log">添加</button>
-        </div>
-    </div>
-
-    <div class="expandable" id="cmd">
-        <div class="header">
-            <div class="title">命令行</div>
-            <div class="toggle">
-                <span class="toggle-icon"><i class="fas fa-angle-down"></i></span>
-            </div>
-        </div>
-        <div class="content">
-            <iframe class="frame" src="http://10.155.101.208/"></iframe>
+            <textarea id="logs" class="messagearea"></textarea>
+            <textarea id="logInput" class="messagearea"></textarea>
+            <button id="addLogIterm">添加</button>
         </div>
     </div>
 

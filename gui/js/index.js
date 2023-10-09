@@ -37,6 +37,77 @@ function createMsg(data) {
 
 
 ((doc) => {
+    //===========================主机程序控制部分===========================
+    const hostAddressInput = doc.querySelector('#Host_IP');
+    const hostPortInput = doc.querySelector('#Host_Port');
+    const shutdownButton = doc.querySelector('#shutdown');
+    var ws = null
+    let userName = 'Client'
+    let passWord = ''
+    const init = () => {
+        let url = location.search
+        if (url.indexOf('?') !== -1) {
+            let str = String(url).slice(0)
+            let arr =  str.split('&')
+            userName = arr[0].split('=')[1]
+            passWord = arr[1].split('=')[1]
+            console.log('userNamepassWord', userName, passWord)
+        }
+	    bindEvent()
+    }
+    function bindEvent() {
+        shutdownButton.addEventListener('click',shutdown,false);
+    }
+    function shutdown(e){
+        shutdownButton.style.backgroundColor = '';
+        connect();
+    }
+    connection = false;
+    function connect(e) {
+        if (!ws){
+                ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
+                ws.addEventListener('open', handleOpen, false);
+                ws.addEventListener('close', handleClose, false);
+                ws.addEventListener('error', handleError, false);
+                ws.addEventListener('message', handleMessage, false);
+        }
+    }
+    function wsSend (msg) {
+        if(!connection) return;
+        if(!ws) return;
+        if (!msg.trim().length) return;
+        ws.send(msg);
+    }
+    function handleOpen (e) {
+        connection = true;
+        shutdownButton.disabled = true;
+        shutdownButton.style.backgroundColor = '#00FF00';
+        wsSend('shutdown')
+    }
+    function handleClose (e) {
+        if(connection){
+            connection = false;
+            shutdownButton.disabled = false;
+            shutdownButton.style.backgroundColor = 'yellow';
+        }
+        delete ws;
+        ws = null;
+    }
+    function handleError (e) {
+        connection = false;
+        shutdownButton.disabled = false;
+        shutdownButton.style.backgroundColor = '';
+        delete ws;
+        ws = null;
+    }
+    function handleMessage (e) {
+        var rsp = e.data.split(" ");
+        console.log(rsp);
+    }
+    init()
+})(document);
+
+((doc) => {
     //===========================FEE部分===========================
     // 获取电子学部分的按钮并禁用
     const feeButtons = doc.querySelectorAll('#FEE button');
@@ -44,12 +115,16 @@ function createMsg(data) {
         button.disabled = true;
     });
     // 获取电子学部分的按钮
-
+    const feeConnectionButton = doc.querySelector('#FEE_connect');
+    feeConnectionButton.disabled = false;
     const feeInitButton = doc.querySelector('#FEE_init');
-    feeInitButton.disabled = false;
+    const feeShutdownButton = doc.querySelector('#FEE_shutdown');
 
-    const feeStartButton = doc.querySelector('#FEE_data_start');
-    const feeStopButton = doc.querySelector('#FEE_data_stop');
+    const feeStartButton = doc.querySelector('#FEE_start');
+    const feeStopButton = doc.querySelector('#FEE_stop');
+
+    const feeDataStartButton = doc.querySelector('#FEE_data_start');
+    const feeDataStopButton = doc.querySelector('#FEE_data_stop');
     const feeSetupButton = doc.querySelector('#FEE_setup');
     const feeselfhitButton = doc.querySelector('#FEE_selftrigger');
     const decoderStartButton = doc.querySelector('#FEE_start_decoder');
@@ -59,9 +134,8 @@ function createMsg(data) {
     const feeThresholdFilePathInput = doc.querySelector('#thresholdFilePath');
     feeThresholdFilePathInput.value = './output/thresholdes.json'
     const feeSpanThresholdProcess = doc.querySelector('#thresholdprocess');
-    const feeslopeButton = doc.querySelector('#slope');
-    const feenchannelButton = doc.querySelector('#nchannel');
-    const feehit_modeButton = doc.querySelector('#hit_mode');
+    // const feeslopeButton = doc.querySelector('#slope');
+    // const feenchannelButton = doc.querySelector('#nchannel');
 
     // 设置主机地址的默认值
     const hostAddressInput = doc.querySelector('#Host_IP');
@@ -72,6 +146,7 @@ function createMsg(data) {
     // 设置电子学部分的SiTCP地址和端口
 
     const siTcpAddress_1_Input = doc.querySelector('#FEE1_addr');
+    // siTcpAddress_1_Input.value = '192.168.10.16';
     siTcpAddress_1_Input.value = '0.0.0.0';
     const siTcpport_1_Input = doc.querySelector('#FEE1_port');
     siTcpport_1_Input.value = '8001';
@@ -90,26 +165,29 @@ function createMsg(data) {
     const bufferFileSizeInput = doc.querySelector('#FEE_bufferSize');
     bufferFileSizeInput.value = '100000000';
 
-    const FEE_setBufferSizeButton = doc.querySelector('#FEE_setBufferSize');
-
-
-    const DP_HostPort = doc.querySelector('#DP_HostPort');
-
     const nTaskSpan1 = doc.querySelector('#DAQ1_nTask');
     const dataRateSpan1 = doc.querySelector('#DAQ1_dataRate');
     const nTaskSpan2 = doc.querySelector('#DAQ2_nTask');
     const dataRateSpan2 = doc.querySelector('#DAQ2_dataRate');
 
-    // 设置斜率阈值的默认值
-    const slopthresholdInput = doc.querySelector('#FEE input[placeholder="hex:0x0020 斜率阈值"]');
+    // 设置触发斜率的默认值
+    const slopthresholdInput = doc.querySelector('#slope');
     slopthresholdInput.value = '0x0020';
     // 设置符合通道的默认值
-    const nchannelInput = doc.querySelector('#FEE input[placeholder="hex:0x0004 符合通道"]');
+    const nchannelInput = doc.querySelector('#nchannel');
     nchannelInput.value = '0x0004';
-    // 设置触发模式的默认值
-    const hitmodeInput = doc.querySelector('#FEE input[placeholder="hex:0x0001 触发模式"]');
-    hitmodeInput.value = '0x0001';
 
+    // 获取T0_check复选框和后续的输入字段
+    const T0Check = document.getElementById("T0_check");
+    const T0Type = document.getElementById("T0_type");
+    const selfT0Frequency = document.querySelector('input[placeholder="self-T0频率，比如50，单位Hz"]');
+    selfT0Frequency.value = '50';
+    const startTime = document.querySelector('input[placeholder="开始响应hit的时间，单位ns"]');
+    startTime.value = '0';
+    const stopTime = document.querySelector('input[placeholder="停止响应hit的时间，单位ns"]');
+    stopTime.value = '10000000';
+    const T0_Button = document.getElementById("T0_button");
+    
     var ws = null
     let userName = 'Client'
     let passWord = ''
@@ -125,59 +203,81 @@ function createMsg(data) {
 	    bindEvent()
     }
     function bindEvent() {
+        feeConnectionButton.addEventListener('click', connect, false);
         feeInitButton.addEventListener('click', feeInit, false);
+        feeShutdownButton.addEventListener('click',feeShutdown, false);
 	    feeStartButton.addEventListener('click',feeStart,false);
 	    feeStopButton.addEventListener('click',feeStop,false);
-
-    
+	    feeDataStartButton.addEventListener('click',feeDataStart,false);
+	    feeDataStopButton.addEventListener('click',feeDataStop,false);
 	    feeSetupButton.addEventListener('click',feeSetup,false);
         feeselfhitButton.addEventListener('click',feeselfhit,false);
         decoderStartButton.addEventListener('click',decoderStart,false);
         decoderStopButton.addEventListener('click',decoderStop,false);
-
-        FEE_setBufferSizeButton.addEventListener('click',setBufferSize,false);
+        bufferFileSizeInput.addEventListener('keydown',setBufferSize,false);
 	    feesetupthresholdButton.addEventListener('click',feesetupthreshold,false);
+	    // feeslopeButton.addEventListener('click',feeslope,false);
+        // feenchannelButton.addEventListener('click',feenchannel,false);
+        slopthresholdInput.addEventListener('keydown',feeslope,false);
+        nchannelInput.addEventListener('keydown',feenchannel,false);
+        T0Check.addEventListener('change', T0CheckChange, false);
+        T0_Button.addEventListener("click",setT0,false);
+        bufferFilePathInput1.addEventListener('keydown',setBufferFilePath1,false);
+        bufferFilePathInput2.addEventListener('keydown',setBufferFilePath2,false);
         
-
-	    feeslopeButton.addEventListener('click',feeslope,false);
-        feenchannelButton.addEventListener('click',feenchannel,false);
-	    feehit_modeButton.addEventListener('click',feehit_mode,false);
     }
-    async function setBufferSize(){
-        FEE_setBufferSizeButton.disabled = true;
-        const command = `setBufferFileSize ${bufferFileSizeInput.value}`;
-        wsSend(command)
+    function setBufferFilePath1(e){
+        if(e.key==='Enter'){
+            const command = `setSiTCP1BufferFilePath ${bufferFilePathInput1.value}`;
+            wsSend(command);
+        }
     }
-    async function feehit_mode(e){
-        feehit_modeButton.disabled = true;
-        feehit_modeButton.style.backgroundColor = 'white';
-        const value = hitmodeInput.value;
-        const cmd = '00102831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
-        const command = `setfeehitmode ${cmd}`+' '+'081020384150607083'+' '+'021020394F5F6F7F83';
-        wsSend(command);
-        // await new Promise(r => setTimeout(r, 1000));
-        // wsSend('send2device 081020384150607083');
-        // await new Promise(r => setTimeout(r, 1000));
-        // wsSend('send2device 021020394F5F6F7F83');
-        // await new Promise(r => setTimeout(r, 1000));
+    function setBufferFilePath2(e){
+        if(e.key==='Enter'){
+            const command = `setSiTCP2BufferFilePath ${bufferFilePathInput2.value}`;
+            wsSend(command);
+        }
+    }
+    function setBufferSize(e){
+        if(e.key==='Enter'){
+            // FEE_setBufferSizeButton.disabled = true;
+            bufferFileSizeInput.disabled = true;
+            const command = `setBufferFileSize ${bufferFileSizeInput.value}`;
+            wsSend(command)
+        }
+    }
+    async function setT0(e){
+        T0_Button.disabled = true;
+        if(T0Check.checked){
+            const command = `set_T0 ${T0Type.value} ${selfT0Frequency.value} ${startTime.value} ${stopTime.value}`;
+            wsSend(command);
+        }
+    }
+    async function T0CheckChange(e) {
+        const isChecked = T0Check.checked;
+        T0Type.disabled = !isChecked;
+        selfT0Frequency.disabled = !isChecked;
+        startTime.disabled = !isChecked;
+        stopTime.disabled = !isChecked;
+        T0_Button.disabled = !isChecked;
     }
     async function feenchannel(e) {
-        feenchannelButton.disabled = true;
-        feenchannelButton.style.backgroundColor = '';
-        const value = nchannelInput.value;
-        const cmd = '02102831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
-        const command = `setfeenchannel ${cmd}`;
-        wsSend(command);
-        // await new Promise(r => setTimeout(r, 1000));
+        if(e.key==='Enter'){
+            const value = nchannelInput.value;
+            const cmd = '02102831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
+            const command = `setfeenchannel ${cmd}`;
+            wsSend(command);
+            nchannelInput.disabled = true;
+        }
     }
     async function feeslope(e) {
-        feeslopeButton.disabled = true;
-        feeslopeButton.style.backgroundColor = 'white';
-        const value = slopthresholdInput.value;
-        const cmd = '00112831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
-        const command = `setfeeslope ${cmd}`;
-        wsSend(command);
-        // await new Promise(r => setTimeout(r, 1000));
+        if(e.key==='Enter'){
+            const value = slopthresholdInput.value;
+            const cmd = '00112831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
+            const command = `setfeeslope ${cmd}`;
+            wsSend(command);
+            slopthresholdInput.disabled = true;
+        }
     }
     function feesetupthreshold(e) {
         const value = feeThresholdFilePathInput.value;
@@ -188,35 +288,49 @@ function createMsg(data) {
     
     function feeselfhit(e) {
         wsSend('selftrigger');
-        feeStartButton.disabled = true;
-        feeStopButton.disabled = false;
         feeselfhitButton.disabled = true;
+        feeselfhitButton.style.backgroundColor = "";
     }
     function feeSetup(e) {
         feesetupthreshold(e);
         feeslope(e);
         feenchannel(e);
-        feehit_mode(e);
+        // feehit_mode(e);//TODO:?
     }
     function feeStop(e) {
-        wsSend('stopdata');
+        wsSend('stopSiTCP');
         feeStopButton.disabled = true;
+        feeStartButton.disabled = false;
     }
     function feeStart(e) {
-        wsSend('startdata');
+        wsSend('startSiTCP');
         feeStartButton.disabled = true;
+        feeStopButton.disabled = false;
+    }
+    function feeDataStop(e) {
+        wsSend('stopSiTCPData');
+        feeDataStopButton.disabled = true;
+        feeDataStartButton.disabled = false;
+    }
+    function feeDataStart(e) {
+        wsSend('startSiTCPData');
+        feeDataStartButton.disabled = true;
+        feeDataStopButton.disabled = false;
     }
     function decoderStart(){
-        wsSend('startDecoder');
+        wsSend('startSiTCPDecoder');
     }
     function decoderStop(){
-        wsSend('stopDecoder');
+        wsSend('stopSiTCPDecoder');
     }
-
     function feeInit(e){
-        connect(e);
+        const command = `initSitcp ${siTcpAddress_1_Input.value} ${siTcpport_1_Input.value} ${bufferFilePathInput1.value} ${siTcpAddress_2_Input.value} ${siTcpport_2_Input.value} ${bufferFilePathInput2.value} ${bufferFileSizeInput.value}`;
+        wsSend(command)
     }
-
+    function feeShutdown(e){
+        wsSend('shutdownSiTCP');
+    }
+    connection = false;
     function connect(e) {
         if (!ws){
             ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
@@ -227,39 +341,43 @@ function createMsg(data) {
         }
     }
     function wsSend (msg) {
+        if(!connection) return;
         if(!ws) return;
         if (!msg.trim().length) return;
         ws.send(msg);
     }
     function handleOpen (e) {
+        connection = true;
         feeButtons.forEach((button) => {
             button.disabled = false;
         });
-        feeInitButton.style.backgroundColor = '#00FF00';
-        feeInitButton.disabled=true;
-        wsSend('register')
-        const command = `initSitcp ${siTcpAddress_1_Input.value} ${siTcpport_1_Input.value} ${bufferFilePathInput1.value} ${siTcpAddress_2_Input.value} ${siTcpport_2_Input.value} ${bufferFilePathInput2.value} ${bufferFileSizeInput.value} ${DP_HostPort.value}`;
-        wsSend(command)
+        feeInitButton.style.backgroundColor = 'yellow'
+        // wsSend('register')
     }
     function handleClose (e) {
+        connection = false;
         feeButtons.forEach((button) => {
             button.disabled = true;
             button.style.backgroundColor='';
         });
+        feeConnectionButton.disabled = false;
         feeInitButton.disabled=false;
         feeInitButton.style.backgroundColor='';
         delete ws;
         ws = null;
-        dataRateSpan1.innerText = '';
-        dataRateSpan2.innerText = '';
-        nTaskSpan1.innerText = '';
-        nTaskSpan2.innerText = '';
+        dataRateSpan1.innerText = '-';
+        dataRateSpan2.innerText = '-';
+        nTaskSpan1.innerText = '-';
+        nTaskSpan2.innerText = '-';
     }
     function handleError (e) {
+        // setTimeout(connect,1000)
+        connection = false;
         feeButtons.forEach((button) => {
             button.disabled = true;
             button.style.backgroundColor='';
         });
+        feeConnectionButton.disabled = false;
         feeInitButton.disabled=false;
         feeInitButton.style.backgroundColor='';
         delete ws;
@@ -274,6 +392,61 @@ function createMsg(data) {
         if(rsp[0]=="dataRate1"){
             dataRateSpan1.innerText = parseFloat(rsp[1]).toFixed(2);
         }
+        else if(rsp[0]=="initSitcp"){
+            if(rsp[1]=='Done'){
+                console.log("initSitcp Done");
+            }
+        }
+        else if(rsp[0]=="shutdownSiTCP"){
+            if(rsp[1]=='Done'){
+                console.log("shutdownSiTCP Done");
+            }
+        }
+        else if(rsp[0]=="SiTCPState"){
+            if(parseInt(rsp[1])==-1 && parseInt(rsp[2])==-1){
+                feeInitButton.style.backgroundColor = 'yellow';
+                feeInitButton.disabled=false;
+                feeStartButton.style.backgroundColor = '';
+                feeStartButton.disabled = true;
+            }else if(parseInt(rsp[1])==0 && parseInt(rsp[2])==0){
+                feeInitButton.style.backgroundColor = '#00FF00';
+                feeInitButton.disabled=true;
+                feeStartButton.style.backgroundColor = 'yellow';
+                feeStartButton.disabled = false;
+            }else if(parseInt(rsp[1])==2 && parseInt(rsp[2])==2){
+                feeInitButton.style.backgroundColor = '#00FF00';
+                feeStartButton.style.backgroundColor = '#00FF00';
+                feeStartButton.disabled = true;
+                feeStopButton.style.backgroundColor = '';
+                feeStopButton.disabled = false;
+            }
+            else if(parseInt(rsp[1])==4 && parseInt(rsp[2])==4){
+                feeStartButton.style.backgroundColor = '';
+                feeStopButton.style.backgroundColor = '';
+                feeStopButton.disabled = true;
+            }
+            // console.log(rsp);
+        }
+        else if(rsp[0]=="SiTCPDataAcquisitionState"){
+            if(parseInt(rsp[1])==2 && parseInt(rsp[2])==2){
+                feeDataStartButton.style.backgroundColor = '#00FF00';
+                feeDataStartButton.disabled = true;
+            }else{
+                feeDataStartButton.style.backgroundColor = '';
+                feeDataStartButton.disabled = false;
+            }
+        }
+        else if(rsp[0]=="SiTCPDecoderState"){
+            if(parseInt(rsp[1])==2 && parseInt(rsp[2])==2){
+                decoderStartButton.style.backgroundColor = '#00FF00';
+                decoderStartButton.disabled = true;
+            }else{
+                decoderStartButton.style.backgroundColor = '';
+                decoderStartButton.disabled = false;
+                decoderStopButton.style.backgroundColor = '';
+            }
+        }
+
         else if(rsp[0]=="dataRate2"){
             dataRateSpan2.innerText = parseFloat(rsp[1]).toFixed(2);
         }
@@ -284,10 +457,12 @@ function createMsg(data) {
             nTaskSpan2.innerText = parseInt(rsp[1]);
         }
         else if(rsp[0]=="nositcp1"){
-            siTcpAddress_1_Input.style.backgroundColor='red';
+            feeInitButton.disabled=false;
+            dataRateSpan1.innerText = '-';
         }
         else if(rsp[0]=="nositcp2"){
-            siTcpAddress_2_Input.style.backgroundColor='red';
+            feeInitButton.disabled=false;
+            dataRateSpan2.innerText = '-';
         }
         else if(rsp[0]=="decoderState1"){
             if(rsp[1]=='False'){
@@ -297,6 +472,8 @@ function createMsg(data) {
             }
         }
         else if(rsp[0]=="daqState1"){
+            feeInitButton.style.backgroundColor = '#00FF00';
+            feeInitButton.disabled=true;
             if(parseInt(rsp[1])==2){
                 feeStartButton.style.backgroundColor='#00FF00';
             }else{
@@ -311,6 +488,8 @@ function createMsg(data) {
             }
         }
         else if(rsp[0]=="daqState2"){
+            feeInitButton.style.backgroundColor = '#00FF00';
+            feeInitButton.disabled=true;
             if(parseInt(rsp[1])==2){
                 feeStartButton.style.backgroundColor='#00FF00';
             }else{
@@ -319,6 +498,7 @@ function createMsg(data) {
         }
         if(rsp[0]=="selftrigger"){
             feeselfhitButton.disabled = false;
+            feeselfhitButton.style.backgroundColor = "yellow";
             alert("噪声测试配置完成");
         }
         else if(rsp[0]=="thresholdsetting"){
@@ -326,28 +506,34 @@ function createMsg(data) {
             feesetupthresholdButton.disabled = false;
             feesetupthresholdButton.style.backgroundColor = '#00FF00';
         }
+        else if(rsp[0]=="T0"){
+            T0_Button.disabled = false;
+            T0_Button.style.backgroundColor = '#00FF00';
+            alert("T0参数已设置");
+        }
         else if(rsp[0]=="setfeenchannel"){
-            feenchannelButton.disabled = false;
-            feenchannelButton.style.backgroundColor = '#00FF00';
+            nchannelInput.disabled = false;
         }
         else if(rsp[0]=="setfeeslope"){
-            feeslopeButton.disabled = false;
-            feeslopeButton.style.backgroundColor = '#00FF00';
-        }
-        else if(rsp[0]=="setfeehitmode"){
-            feehit_modeButton.disabled = false;
-            feehit_modeButton.style.backgroundColor = '#00FF00';
+            slopthresholdInput.disabled = false;
         }
         else if(rsp[0]=="setBufferFileSize"){
-            FEE_setBufferSizeButton.disabled = false;
-            FEE_setBufferSizeButton.style.backgroundColor='#00FF00';
+            bufferFileSizeInput.disabled = false;
         }
     }
     function dump(){
-        wsSend('dumpSitcp');
+        // wsSend('dumpSitcp');
+        wsSend('getSiTCPState');
+        wsSend('getSiTCPDataAcquisitionState');
+        wsSend('getSiTCPDecoderState');
+        wsSend('getSiTCP1DataRate');
+        wsSend('getSiTCP2DataRate');
+        wsSend('getSiTCP1NTask');
+        wsSend('getSiTCP2NTask');
     }
+    // connect();
     setInterval(dump, 1000);
-    init()
+    init() 
 })(document);
 
 ((doc) => {
@@ -357,19 +543,19 @@ function createMsg(data) {
     RawEventProcessorButtons.forEach((button) => {
         button.disabled = true;
     });
-
+    const DPConnectionButton = doc.querySelector('#DP_connect');
+    DPConnectionButton.disabled=false;
     const DPInitButton = doc.querySelector('#DP_init');
-    DPInitButton.disabled = false;
-    const DP_HostPort = doc.querySelector('#DP_HostPort');
-    DP_HostPort.value = '8003';
-    const QA_HostPort = doc.querySelector('#QA_HostPort');
-    QA_HostPort.value = '8004';
+    const DPShutdownButton = doc.querySelector('#DP_shutdown');
     const eventsPerFile = doc.querySelector('#eventsPerFile');
-    eventsPerFile.value = 100;
+    eventsPerFile.value = 1000;
     const storageDir = doc.querySelector('#storageDir');
     storageDir.value = './output'
-    // event rate 显示
-    const eventRateSpan = doc.querySelector('#eventRate');
+    // event 显示
+    const DPTotalEventSpan = doc.querySelector('#DPTotalEvent');
+    const DPCurrentEventIDSpan = doc.querySelector('#DPCurrentEventID');
+    const DPEventRateSpan = doc.querySelector('#DPEventRate')
+    DPEventRateSpan.innerText = '-';
     // 设置主机地址的默认值
     const hostAddressInput = doc.querySelector('#Host_IP');
     // 设置端口的默认值
@@ -382,10 +568,8 @@ function createMsg(data) {
     const RawEventStopButton = doc.querySelector('#DP_stop_rawevent');
     const EventStartButton = doc.querySelector('#DP_start_event');
     const EventStopButton = doc.querySelector('#DP_stop_event');
-    const QADataStartButton = doc.querySelector('#DP_start_QAData');
-    const QADataStopButton = doc.querySelector('#DP_stop_QAData');
 
-    const raweventFilesSpan = doc.querySelector('#raweventFiles');
+    const outputFileIDSpan = doc.querySelector('#outputFileID');
 
     const ParameterButton = doc.querySelector('#DP_ParameterButton');
     const ParameterEventsInput = doc.querySelector('#DP_ParameterEventsInput');
@@ -398,45 +582,41 @@ function createMsg(data) {
     const VdriftlInput = doc.querySelector('#RawEventProcessor input[placeholder="Vdrift"]');
     VdriftlInput.value = 10.0;
     const FEE00_01Input = doc.querySelector('#FEE00_01');
-    FEE00_01Input.value = 02;
+    FEE00_01Input.value = 14;
     const FEE02_03Input = doc.querySelector('#FEE02_03');
-    FEE02_03Input.value = 00;
+    FEE02_03Input.value = 15;
     const FEE04_05Input = doc.querySelector('#FEE04_05');
-    FEE04_05Input.value = 10;
+    FEE04_05Input.value = 7;
     const FEE06_07Input = doc.querySelector('#FEE06_07');
-    FEE06_07Input.value = 08;
+    FEE06_07Input.value = 6;
     const FEE08_09Input = doc.querySelector('#FEE08_09');
-    FEE08_09Input.value = 15;
+    FEE08_09Input.value = 11;
     const FEE10_11Input = doc.querySelector('#FEE10_11');
-    FEE10_11Input.value = 15;
+    FEE10_11Input.value = 10;
     const FEE12_13Input = doc.querySelector('#FEE12_13');
-    FEE12_13Input.value = 15;
+    FEE12_13Input.value = 2;
     const FEE14_15Input = doc.querySelector('#FEE14_15');
-    FEE14_15Input.value = 15;
+    FEE14_15Input.value = 3;
     const FEE16_17Input = doc.querySelector('#FEE16_17');
-    FEE16_17Input.value = 15;
+    FEE16_17Input.value = 5;
     const FEE18_19Input = doc.querySelector('#FEE18_19');
-    FEE18_19Input.value = 15;
+    FEE18_19Input.value = 4;
     const FEE20_21Input = doc.querySelector('#FEE20_21');
-    FEE20_21Input.value = 15;
+    FEE20_21Input.value = 12;
     const FEE22_23Input = doc.querySelector('#FEE22_23');
-    FEE22_23Input.value = 15;
+    FEE22_23Input.value = 13;
     const FEE24_25Input = doc.querySelector('#FEE24_25');
-    FEE24_25Input.value = 15;
+    FEE24_25Input.value = 8;
     const FEE26_27Input = doc.querySelector('#FEE26_27');
-    FEE26_27Input.value = 15;
+    FEE26_27Input.value = 9;
     const FEE28_29Input = doc.querySelector('#FEE28_29');
-    FEE28_29Input.value = 15;
+    FEE28_29Input.value = 0;
     const FEE30_31Input = doc.querySelector('#FEE30_31');
-    FEE30_31Input.value = 15;
+    FEE30_31Input.value = 1;
     const ElectrnicGainFilePathInput = doc.querySelector('#RawEventProcessor input[type="text"][placeholder="电子学增益配置文件"]');
-    ElectrnicGainFilePathInput.value = 'ElectronicFilePath';
+    ElectrnicGainFilePathInput.value = '/storage/ATTPC/DAQ/Electronic_parameter.json';
     const MicromegasGasFilePathInput = doc.querySelector('#RawEventProcessor input[type="text"][placeholder="阳极板增益配置文件"]');
     MicromegasGasFilePathInput.value = 'MicromegasFilePath';
-
-    const NRawEventsPerFileInput = doc.querySelector('#RawEventProcessor input[type="text"][placeholder="单文件事件数"]');
-    const RawEventFilePathInput = doc.querySelector('#RawEventProcessor input[type="text"][placeholder="文件存储位置"]');
-    // RawEventFilePathInput.style.width = '500px';
 
     var ws = null
     let userName = 'Client'
@@ -453,26 +633,22 @@ function createMsg(data) {
 	    bindEvent()
     }
     function bindEvent() {
-        //#Net
+        DPConnectionButton.addEventListener('click',connect,false);
         DPInitButton.addEventListener('click',DPInit,false);
-        //#RawEventProcessor
+        DPShutdownButton.addEventListener('click', DPShutdown, false);
         RawEventProcessorStartButton.addEventListener('click',RawEventProcessorStart,false);
         RawEventProcessorStopButton.addEventListener('click',RawEventProcessorStop,false);
-        NRawEventsPerFileInput.addEventListener('keydown', setNRawEventsPerFile, false);
-        RawEventFilePathInput.addEventListener('keydown', setRawEventFilePath, false);
+        eventsPerFile.addEventListener('keydown', setNRawEventsPerFile, false);
+        storageDir.addEventListener('keydown', setRawEventFilePath, false);
 
         RawEventStartButton.addEventListener('click', turnOnRawEventSave, false);
         RawEventStopButton.addEventListener('click',turnOffRawEventSave,false);
         EventStartButton.addEventListener('click',turnOnEventSave,false);
         EventStopButton.addEventListener('click',turnOffEventSave,false);
-        QADataStartButton.addEventListener('click',turnOnQAData,false);
-        QADataStopButton.addEventListener('click',turnOffQAData,false);
-
         ParameterButton.addEventListener('click',parameterGenerate,false);
-        
     }
     function parameterGenerate(){
-        wsSend('generateParameter ' + ParameterEventsInput.value);
+        wsSend('setDataProcessorParameterEvents ' + ParameterEventsInput.value);
         ParameterButton.disabled = true;
     }
     function turnOnRawEventSave(){
@@ -495,61 +671,53 @@ function createMsg(data) {
         EventStartButton.disabled = false;
         EventStopButton.disabled = true;
     }
-    function turnOnQAData(){
-        wsSend('turnOnQAData')
-        QADataStartButton.disabled = true;
-        QADataStopButton.disabled = false;
-    }
-    function turnOffQAData(){
-        wsSend('turnOffQAData')
-        QADataStartButton.disabled = false;
-        QADataStopButton.disabled = true;
-    }
-    function setRawEventFilePath(){
+    function setRawEventFilePath(e){
         if(e.key==='Enter'){
-            const path = RawEventFilePathInput.value;
-            const command = `setdir ${path}`;
+            const path = storageDir.value;
+            const command = `setDataProcessorDir ${path}`;
             wsSend(command);
         }
     }
-    function setNRawEventsPerFile(){
+    function setNRawEventsPerFile(e){
         if(e.key==='Enter'){
-            const NEvents = NRawEventsPerFileInput.value;
-            const command = `setEventsPerFile ${NEvents}`;
+            const NEvents = eventsPerFile.value;
+            const command = `setDataProcessorEventsPerFile ${NEvents}`;
             wsSend(command);
         }
     }
     function RawEventProcessorStop(){
-        wsSend('stopdataprocessor');
-        RawEventProcessorStartButton.disabled = true;
+        wsSend('stopDataProcessor');
+        RawEventProcessorStartButton.disabled = false;
         RawEventProcessorStopButton.disabled = true;
         ParameterButton.disabled = true;
     }
     function RawEventProcessorStart(){
-        wsSend('startdataprocessor');
+        wsSend('startDataProcessor');
         RawEventProcessorStartButton.disabled = true;
         RawEventProcessorStopButton.disabled = false;
         ParameterButton.disabled = false;
     }
     function RawEventProcessorInit(){
-        if (RawEventFilePathInput.value !== ''){
-            const path = RawEventFilePathInput.value;
-            const command = `setdir ${path}`;
-            wsSend(command);
-        }
-        if (NRawEventsPerFileInput.value !== ''){
-            const NEvents = NRawEventsPerFileInput.value;
-            const command = `setEventsPerFile ${NEvents}`;
-            wsSend(command);
-        }
-        const command = `initdataprocessor ${storageDir.value} ${DP_HostPort.value} ${QA_HostPort.value} ${eventsPerFile.value} `;
+        
+        const command = `initDataProcessor ${storageDir.value} ${eventsPerFile.value} `;
         wsSend(command)
+
         RawEventProcessorStartButton.disabled = false;
         RawEventProcessorStopButton.disabled = false;
 
         RawEventStartButton.disabled = false;
         EventStartButton.disabled = false;
-        QADataStartButton.disabled = false;
+
+        // if (RawEventFilePathInput.value !== ''){
+        //     const path = RawEventFilePathInput.value;
+        //     const command = `setDataProcessDir ${path}`;
+        //     wsSend(command);
+        // }
+        // if (NRawEventsPerFileInput.value !== ''){
+        //     const NEvents = NRawEventsPerFileInput.value;
+        //     const command = `setEventsPerFile ${NEvents}`;
+        //     wsSend(command);
+        // }
 
         const command1 = `setWvalueAndVdrift ${WvaluelInput.value} ${VdriftlInput.value}`;
         wsSend(command1);
@@ -598,87 +766,123 @@ function createMsg(data) {
         wsSend(command3)
             
     }
-    function DPInit(e){
-        connect(e);
+    function DPShutdown(e){
+        wsSend('shutdownDataProcessor')
     }
+    function DPInit(e){
+        RawEventProcessorInit();
+    }
+    connection = false;
     function connect(e) {
         if (!ws){
-            ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
-            ws.addEventListener('open', handleOpen, false);
-            ws.addEventListener('close', handleClose, false);
-            ws.addEventListener('error', handleError, false);
-            ws.addEventListener('message', handleMessage, false);
+                ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
+                ws.addEventListener('open', handleOpen, false);
+                ws.addEventListener('close', handleClose, false);
+                ws.addEventListener('error', handleError, false);
+                ws.addEventListener('message', handleMessage, false);
         }
     }
     function wsSend (msg) {
+        if(!connection) return;
         if(!ws) return;
         if (!msg.trim().length) return;
         ws.send(msg);
     }
     function handleOpen (e) {
-        DPInitButton.style.backgroundColor = '#00FF00';
-        DPInitButton.disabled=true;
-        wsSend('register')
-        // const command = `initSitcp ${siTcpAddress_1_Input.value} ${siTcpport_1_Input.value} ${bufferFilePathInput1.value} ${siTcpAddress_2_Input.value} ${siTcpport_2_Input.value} ${bufferFilePathInput2.value} ${bufferFileSizeInput.value} ${DP_HostPort.value}`;
-        // wsSend(command)
-        RawEventProcessorInit();
-        RawEventProcessorStartButton.disabled = false;
-        RawEventProcessorStopButton.disabled = false;
+        connection = true;
+        RawEventProcessorButtons.forEach((button) => {
+            button.disabled = false;
+        });
+        DPInitButton.style.backgroundColor = 'yellow';
+        // wsSend('register')
     }
     function handleClose (e) {
+        connection = false;
         RawEventProcessorButtons.forEach((button) => {
             button.disabled = true;
             button.style.backgroundColor='';
         });
-        eventRateSpan.innerText = '-';
+        DPConnectionButton.disabled=false;
         DPInitButton.disabled = false;
         delete ws;
         ws = null;
     }
     function handleError (e) {
+        // setTimeout(connect,3000)
+        connection = false;
         RawEventProcessorButtons.forEach((button) => {
             button.disabled = true;
             button.style.backgroundColor='';
         });
+        DPConnectionButton.disabled=false;
         DPInitButton.disabled = false;
-        eventRateSpan.innerText = '-';
         delete ws;
         ws = null;
     }
     function handleMessage (e) {
         var rsp = e.data.split(" ");
-        if(rsp[0]=="eventRate"){
-            eventRateSpan.innerText = parseFloat(rsp[1]).toFixed(2);
+        if(rsp[0]=="DataProcessorTotalEvent"){
+            DPTotalEventSpan.innerText = parseInt(rsp[1]);
         }
-        else if(rsp[0]=="parameterEvent"){
+        if(rsp[0]=="DataProcessorCurrentEventID"){
+            DPCurrentEventIDSpan.innerText = parseInt(rsp[1]);
+        }
+        else if(rsp[0]=="DataProcessorParameterEvents"){
             ParaterEventsSpan.innerText = parseInt(rsp[1]);
             if(parseInt(rsp[1]) == 0) {
-                alert("参数文件已产生");
+                // alert("参数文件已产生");
                 ParameterButton.disabled = false;
         }
         }
-        else if(rsp[0]=="raweventFiles"){
-            raweventFilesSpan.innerText = parseInt(rsp[1]);
+        else if(rsp[0]=="DataProcessorCurrentFileID"){
+            outputFileIDSpan.innerText = parseInt(rsp[1]);
         }
-        else if(rsp[0]=="DPState"){
+        else if(rsp[0]=="DataProcessorState"){
+            if(parseInt(rsp[1]) == -1){
+                DPInitButton.style.backgroundColor='yellow'
+                DPInitButton.disabled = false;
+            }else{
+                DPInitButton.style.backgroundColor='#00FF00'
+                DPInitButton.disabled = true;
+            }
             if(parseInt(rsp[1]) == 2){
                 RawEventProcessorStartButton.style.backgroundColor='#00FF00'
+                RawEventProcessorStartButton.disabled = true;
                 RawEventProcessorStopButton.style.backgroundColor=''
+                RawEventProcessorStopButton.disabled = false;
             }
             if(parseInt(rsp[1]) == 4){
-                RawEventProcessorStopButton.style.backgroundColor='Red'
                 RawEventProcessorStartButton.style.backgroundColor=''
+                RawEventProcessorStartButton.disabled = false;
+                RawEventProcessorStopButton.style.backgroundColor=''
+                RawEventProcessorStopButton.disabled = true;
             }
         }
         else if(rsp[0]=="NODP"){
-
+            DPInitButton.disabled = false
         }
     }
 
     function dump(){
-        wsSend('dumpDP');
+        // wsSend('dumpDP');
+        wsSend('getDataProcessorState');
+        wsSend('getDataProcessorTotalEvent');
+        wsSend('getDataProcessorCurrentEventID');
+        wsSend('getDataProcessorCurrentFileID');
+        wsSend('getDataProcessorParameterEvents');
     }
+    // connect();
     setInterval(dump, 1000);
+    var DPEventNumber = 0;
+    function estimateEventRate(){
+        DPCurrentEventNumber=parseInt(DPTotalEventSpan.innerText);
+        if(DPEventNumber>0){
+            rate = (DPCurrentEventNumber-DPEventNumber)/60;
+            DPEventRateSpan.innerText = parseFloat(rate).toFixed(2);
+        }
+        DPEventNumber= DPCurrentEventNumber;
+    }
+    setInterval(estimateEventRate, 60000);
     init()
 })(document);
 
@@ -686,24 +890,25 @@ function createMsg(data) {
 ((doc) => {
     //===========================QAProcessor部分===========================
     // QAProcessor的按钮并禁用
-    const QAProcessorButtons = doc.querySelectorAll('#QAProcessor button');
-    QAProcessorButtons.forEach((button) => {
+    const Buttons = doc.querySelectorAll('#QAProcessor button');
+    Buttons.forEach((button) => {
         button.disabled = true;
     });
+    const ConnectionButton = doc.querySelector('#QA_connect');
+    ConnectionButton.disabled = false;
+    const InitButton = doc.querySelector('#QA_init');
+    const ShutdownButton = doc.querySelector('#QA_shutdown')
+    const StartButton = doc.querySelector('#QA_start');
+    const StopButton = doc.querySelector('#QA_stop');
+    const QATotalEventSpan = doc.querySelector('#QATotalEvent');
+    const QACurrentEventIDSpan = doc.querySelector('#QACurrentEventID');
     const QAEventRateSpan = doc.querySelector('#QAEventRate');
-
-    const hostAddressInput = document.querySelector('#Host_IP');
+    QAEventRateSpan.innerText='-';
+    const hostAddressInput = doc.querySelector('#Host_IP');
     const hostPortInput = doc.querySelector('#Host_Port');
-
-    const QA_HostPort = doc.querySelector('#QA_HostPort');
-
     const HttpServerPort = document.querySelector('#HttpServerPort');
     HttpServerPort.value = '8008';
-
-    const QAProcessorInitButton = doc.querySelector('#QA_init');
-    QAProcessorInitButton.disabled = false;
-    const QAProcessorStartButton = doc.querySelector('#QA_start');
-    const QAProcessorStopButton = doc.querySelector('#QA_stop');
+    const storageDir = doc.querySelector('#storageDir');
 
     var ws = null
     let userName = 'Client'
@@ -720,17 +925,20 @@ function createMsg(data) {
 	    bindEvent()
     }
     function bindEvent() {
-        QAProcessorInitButton.addEventListener('click',QAProcessorInit,false);
-        QAProcessorStartButton.addEventListener('click',QAProcessorStart,false);
-        QAProcessorStopButton.addEventListener('click',QAProcessorStop,false);
+        ConnectionButton.addEventListener('click',connect,false);
+        InitButton.addEventListener('click',QAProcessorInit,false);
+        ShutdownButton.addEventListener('click',QAProcessorShutdown,false);
+        StartButton.addEventListener('click',QAProcessorStart,false);
+        StopButton.addEventListener('click',QAProcessorStop,false);
+    }
+    function QAProcessorShutdown(e){
+        wsSend('shutdownQA');
     }
     function QAProcessorStop(){
-        wsSend('stopeventqa');
-        QAProcessorStopButton.disabled = true;
+        wsSend('stopQA');
     }
     function QAProcessorStart(){
-        wsSend('starteventqa');
-        QAProcessorStartButton.disabled = true;
+        wsSend('startQA');
         setTimeout(reloadQAFram, 2000);
     }
     function reloadQAFram(){
@@ -738,78 +946,214 @@ function createMsg(data) {
         iframe.src = 'http://'+hostAddressInput.value+':'+HttpServerPort.value;
     }
     function QAProcessorInit(e){
-        connect(e);
+        const command = `initQA ${HttpServerPort.value} ${storageDir.value}`;
+        wsSend(command)
     }
+    connection = false;
     function connect(e) {
         if (!ws){
-            ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
-            ws.addEventListener('open', handleOpen, false);
-            ws.addEventListener('close', handleClose, false);
-            ws.addEventListener('error', handleError, false);
-            ws.addEventListener('message', handleMessage, false);
+                ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
+                ws.addEventListener('open', handleOpen, false);
+                ws.addEventListener('close', handleClose, false);
+                ws.addEventListener('error', handleError, false);
+                ws.addEventListener('message', handleMessage, false);
         }
     }
     function wsSend (msg) {
+        if(!connection) return;
         if(!ws) return;
         if (!msg.trim().length) return;
         ws.send(msg);
     }
     function handleOpen (e) {
-        const command = `initeventqa ${HttpServerPort.value} ${QA_HostPort.value} ${hostAddressInput.value} `;
-        wsSend(command)
-        QAProcessorInitButton.style.backgroundColor = '#00FF00';
-        QAProcessorInitButton.disabled = true;
-        QAProcessorStartButton.disabled = false;
-        QAProcessorStopButton.disabled = false;
-        wsSend('register')
+        connection = true;
+        Buttons.forEach((button) => {
+            button.disabled = false;
+        });
+        InitButton.style.backgroundColor = 'yellow';
+        // wsSend('register')
     }
     function handleClose (e) {
-        QAProcessorButtons.forEach((button) => {
+        connection = false;
+        Buttons.forEach((button) => {
             button.disabled = true;
             button.style.backgroundColor='';
         });
-        QAProcessorInitButton.disabled = false;
+        InitButton.disabled = false;
+        ConnectionButton.disabled = false;
         delete ws;
         ws = null;
     }
     function handleError (e) {
-        QAProcessorButtons.forEach((button) => {
+        // setTimeout(connect,3000)
+        connection = false;
+        Buttons.forEach((button) => {
             button.disabled = true;
             button.style.backgroundColor='';
         });
-        QAProcessorInitButton.disabled = false;
+        InitButton.disabled = false;
+        ConnectionButton.disabled = false;
         delete ws;
         ws = null;
     }
     function handleMessage (e) {
 	    console.log('message', e);
         var rsp = e.data.split(" ");
-        if(rsp[0]=="QAEventRate"){
-            QAEventRateSpan.innerText = parseFloat(rsp[1]).toFixed(2);
+        if(rsp[0]=="QATotalEvent"){
+            QATotalEventSpan.innerText = parseInt(rsp[1]);
+        }
+        if(rsp[0]=="QACurrentEventID"){
+            QACurrentEventIDSpan.innerText = parseInt(rsp[1]);
         }
         else if(rsp[0] == "QAState"){
+            if(parseInt(rsp[1]) == -1){
+                InitButton.disabled = false;
+                InitButton.style.backgroundColor = 'yellow';
+            }else{
+                InitButton.disabled = true;
+                InitButton.style.backgroundColor = '#00FF00'; 
+            }
             if(parseInt(rsp[1]) == 2){
-                QAProcessorStartButton.disabled = true;
-                QAProcessorStartButton.style.backgroundColor = '#00FF00';
-                QAProcessorStopButton.disabled = false;
-                QAProcessorStopButton.style.backgroundColor = '';
+                StartButton.disabled = true;
+                StartButton.style.backgroundColor = '#00FF00';
+                StopButton.disabled = false;
+                StopButton.style.backgroundColor = '';
             }else if(parseInt(rsp[1]) > 2){
-                QAProcessorStartButton.disabled = false;
-                QAProcessorStartButton.style.backgroundColor = '';
-                QAProcessorStopButton.disabled = true;
-                QAProcessorStopButton.style.backgroundColor = 'Red';
+                StartButton.disabled = false;
+                StartButton.style.backgroundColor = '';
+                StopButton.disabled = true;
+                StopButton.style.backgroundColor = 'Red';
                 setTimeout(reloadQAFram, 2000);
+            }else if(parseInt(rsp[1]) == 0){
+                StartButton.disabled = false;
+                StartButton.style.backgroundColor = '';
             }
         }
         else if(rsp[0] == "NOQA"){
-            
+            Buttons.forEach((button) => {
+                // button.disabled = true;
+                button.style.backgroundColor='';
+            });
+            InitButton.disabled = false;
         }
     }
     function dump(){
-        wsSend('dumpQA');
+        // wsSend('dumpQA');
+        wsSend('getQAState');
+        wsSend('getQATotalEvent');
+        wsSend('getQACurrentEventID');
     }
     setInterval(dump, 1000);
-    
+
+    var QAEventNumber = 0;
+    function estimateEventRate(){
+        QACurrentEventNumber=parseInt(QATotalEventSpan.innerText);
+        if(QAEventNumber>0){
+            rate = (QACurrentEventNumber-QAEventNumber)/60;
+            QAEventRateSpan.innerText = parseFloat(rate).toFixed(2);
+        }
+        QAEventNumber= QACurrentEventNumber;
+    }
+    setInterval(estimateEventRate, 60000);
+
     init()
 
+})(document);
+
+((doc) => {
+    //===========================Log部分===========================
+    const connectionButton = doc.querySelector('#log_connect');
+    const createLogButton = doc.querySelector('#createLog');
+    const hostAddressInput = doc.querySelector('#Host_IP');
+    const hostPortInput = doc.querySelector('#Host_Port');
+    const logs = doc.querySelector('#logs');
+    logs.style.height = '300px';
+    logs.disabled = true;
+    const logInput = doc.querySelector('#logInput');
+    logInput.style.height = '100px';
+    const addLogItermButton = doc.querySelector('#addLogIterm');
+    const logDir = doc.querySelector('#storageDir');
+
+    var ws = null
+    let userName = 'Client'
+    let passWord = ''
+    const init = () => {
+        let url = location.search
+        if (url.indexOf('?') !== -1) {
+            let str = String(url).slice(0)
+            let arr =  str.split('&')
+            userName = arr[0].split('=')[1]
+            passWord = arr[1].split('=')[1]
+            console.log('userNamepassWord', userName, passWord)
+        }
+	    bindEvent()
+    }
+    function bindEvent() {
+        connectionButton.addEventListener('click',connect,false);
+        createLogButton.addEventListener('click',createLog,false);
+        addLogItermButton.addEventListener('click',addLogIterm,false);
+    }
+    function createLog(e){
+        createLogButton.disabled = true;
+        createLogButton.style.backgroundColor = '';
+        wsSend('newLog '+ logDir.value);
+    }
+    function addLogIterm(e){
+        wsSend('log '+ logInput.value);
+    }
+    connection = false;
+    function connect(e) {
+        if (!ws){
+                ws = new WebSocket('ws:'+hostAddressInput.value+':'+hostPortInput.value);
+                ws.addEventListener('open', handleOpen, false);
+                ws.addEventListener('close', handleClose, false);
+                ws.addEventListener('error', handleError, false);
+                ws.addEventListener('message', handleMessage, false);
+        }
+    }
+    function wsSend (msg) {
+        if(!connection) return;
+        if(!ws) return;
+        if (!msg.trim().length) return;
+        ws.send(msg);
+    }
+    function handleOpen (e) {
+        connection = true;
+        connectionButton.style.backgroundColor = '#00FF00';
+        connectionButton.disabled = true;
+        createLogButton.style.backgroundColor = 'yellow';
+    }
+    function handleClose (e) {
+        connection = false;
+        connectionButton.style.backgroundColor = '';
+        connectionButton.disabled = false;
+        delete ws;
+        ws = null;
+    }
+    function handleError (e) {
+        connection = false;
+        connectionButton.style.backgroundColor = '';
+        connectionButton.disabled = false;
+        delete ws;
+        ws = null;
+    }
+    function handleMessage (e) {
+        var rsp = e.data.split(" ");
+        console.log(rsp);
+        if(rsp[0] == "newLog"){
+            createLogButton.disabled = false;
+            createLogButton.style.backgroundColor = '#00FF00';
+        }
+        else if(rsp[3] == "INFO"){
+            logs.value = e.data;
+        }
+        else if(rsp[0] == "noLogger"){
+            createLogButton.style.backgroundColor = 'red';
+        }
+    }
+    function dump(){
+        wsSend('getLog');
+    }
+    setInterval(dump, 1000);
+    init()
 })(document);
