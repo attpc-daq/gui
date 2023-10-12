@@ -25,17 +25,6 @@ expandables.forEach((expandable) =>{
     });
 });
 
-function appendMessage(msg){
-    var textArea=document.getElementById('messages');
-    textArea.value=textArea.value+"\n"+msg;
-    textArea.scroll({ top: textArea.scrollHeight, left: 0, behavior: "smooth" });
-}
-function createMsg(data) {
-    const {user, msg, type, dateTime} = data;
-    return user+"  --"+type+"--\n  ( "+dateTime+" )    "+msg;
-}
-
-
 ((doc) => {
     //===========================主机程序控制部分===========================
     const hostAddressInput = doc.querySelector('#Host_IP');
@@ -146,18 +135,18 @@ function createMsg(data) {
     // 设置电子学部分的SiTCP地址和端口
 
     const siTcpAddress_1_Input = doc.querySelector('#FEE1_addr');
-    // siTcpAddress_1_Input.value = '192.168.10.16';
-    siTcpAddress_1_Input.value = '0.0.0.0';
+    siTcpAddress_1_Input.value = '192.168.10.16';
+    // siTcpAddress_1_Input.value = '0.0.0.0';
     const siTcpport_1_Input = doc.querySelector('#FEE1_port');
-    siTcpport_1_Input.value = '8001';
+    siTcpport_1_Input.value = '4660';
 
     const bufferFilePathInput1 = doc.querySelector('#FEE1_bufferPath');
     bufferFilePathInput1.value = './output/buffers1' ;
 
     const siTcpAddress_2_Input = doc.querySelector('#FEE2_addr');
-    siTcpAddress_2_Input.value = '0.0.0.0';
+    siTcpAddress_2_Input.value = '192.168.10.15';
     const siTcpport_2_Input = doc.querySelector('#FEE2_port');
-    siTcpport_2_Input.value = '8002';
+    siTcpport_2_Input.value = '4660';
 
     const bufferFilePathInput2 = doc.querySelector('#FEE2_bufferPath');
     bufferFilePathInput2.value = './output/buffers2' ;
@@ -267,7 +256,9 @@ function createMsg(data) {
             const cmd = '02102831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
             const command = `setfeenchannel ${cmd}`;
             wsSend(command);
+            nchannelInput.backgroundColor = 'yellow';
             nchannelInput.disabled = true;
+            
         }
     }
     async function feeslope(e) {
@@ -276,7 +267,9 @@ function createMsg(data) {
             const cmd = '00112831'+'4'+value[5]+'5'+value[4]+'6'+value[3]+'7'+value[2]+'83';
             const command = `setfeeslope ${cmd}`;
             wsSend(command);
+            slopthresholdInput.backgroundColor = 'yellow';
             slopthresholdInput.disabled = true;
+            
         }
     }
     function feesetupthreshold(e) {
@@ -351,7 +344,9 @@ function createMsg(data) {
         feeButtons.forEach((button) => {
             button.disabled = false;
         });
-        feeInitButton.style.backgroundColor = 'yellow'
+	feeConnectionButton.style.backgroundColor = '#00FF00';
+        feeConnectionButton.disabled = true;
+        feeInitButton.style.backgroundColor = 'yellow';
         // wsSend('register')
     }
     function handleClose (e) {
@@ -361,8 +356,6 @@ function createMsg(data) {
             button.style.backgroundColor='';
         });
         feeConnectionButton.disabled = false;
-        feeInitButton.disabled=false;
-        feeInitButton.style.backgroundColor='';
         delete ws;
         ws = null;
         dataRateSpan1.innerText = '-';
@@ -378,8 +371,6 @@ function createMsg(data) {
             button.style.backgroundColor='';
         });
         feeConnectionButton.disabled = false;
-        feeInitButton.disabled=false;
-        feeInitButton.style.backgroundColor='';
         delete ws;
         ws = null;
         dataRateSpan1.innerText = '-';
@@ -405,25 +396,41 @@ function createMsg(data) {
         else if(rsp[0]=="SiTCPState"){
             if(parseInt(rsp[1])==-1 && parseInt(rsp[2])==-1){
                 feeInitButton.style.backgroundColor = 'yellow';
-                feeInitButton.disabled=false;
+		feeShutdownButton.style.backgroundColor='';
                 feeStartButton.style.backgroundColor = '';
+                feeStopButton.style.backgroundColor = '';	
+                feeInitButton.disabled=false;
+		feeShutdownButton.disabled=true;
                 feeStartButton.disabled = true;
+		feeStopButton.disabled=true;
             }else if(parseInt(rsp[1])==0 && parseInt(rsp[2])==0){
                 feeInitButton.style.backgroundColor = '#00FF00';
-                feeInitButton.disabled=true;
+		feeShutdownButton.style.backgroundColor='';
                 feeStartButton.style.backgroundColor = 'yellow';
+                feeStopButton.style.backgroundColor = '';	
+                feeInitButton.disabled=true;
+		feeShutdownButton.disabled=true;
                 feeStartButton.disabled = false;
+		feeStopButton.disabled=true;
             }else if(parseInt(rsp[1])==2 && parseInt(rsp[2])==2){
                 feeInitButton.style.backgroundColor = '#00FF00';
+		feeShutdownButton.style.backgroundColor='';
                 feeStartButton.style.backgroundColor = '#00FF00';
+                feeStopButton.style.backgroundColor = '';	
+                feeInitButton.disabled=true;
+		feeShutdownButton.disabled=true;
                 feeStartButton.disabled = true;
-                feeStopButton.style.backgroundColor = '';
-                feeStopButton.disabled = false;
+		feeStopButton.disabled=false;
             }
             else if(parseInt(rsp[1])==4 && parseInt(rsp[2])==4){
+                feeInitButton.style.backgroundColor = '#00FF00';
+		feeShutdownButton.style.backgroundColor='yellow';
                 feeStartButton.style.backgroundColor = '';
-                feeStopButton.style.backgroundColor = '';
-                feeStopButton.disabled = true;
+                feeStopButton.style.backgroundColor = 'red';	
+                feeInitButton.disabled=true;
+		feeShutdownButton.disabled=false;
+                feeStartButton.disabled = true;
+		feeStopButton.disabled=true;
             }
             // console.log(rsp);
         }
@@ -513,9 +520,11 @@ function createMsg(data) {
         }
         else if(rsp[0]=="setfeenchannel"){
             nchannelInput.disabled = false;
+            nchannelInput.backgroundColor = '#00FF00';
         }
         else if(rsp[0]=="setfeeslope"){
             slopthresholdInput.disabled = false;
+            slopthresholdInput.backgroundColor = '#00FF00';
         }
         else if(rsp[0]=="setBufferFileSize"){
             bufferFileSizeInput.disabled = false;
@@ -793,6 +802,8 @@ function createMsg(data) {
         RawEventProcessorButtons.forEach((button) => {
             button.disabled = false;
         });
+        DPConnectionButton.style.backgroundColor = '#00FF00';
+        DPConnectionButton.disabled=true;
         DPInitButton.style.backgroundColor = 'yellow';
         // wsSend('register')
     }
@@ -803,7 +814,6 @@ function createMsg(data) {
             button.style.backgroundColor='';
         });
         DPConnectionButton.disabled=false;
-        DPInitButton.disabled = false;
         delete ws;
         ws = null;
     }
@@ -815,7 +825,6 @@ function createMsg(data) {
             button.style.backgroundColor='';
         });
         DPConnectionButton.disabled=false;
-        DPInitButton.disabled = false;
         delete ws;
         ws = null;
     }
@@ -840,26 +849,43 @@ function createMsg(data) {
         else if(rsp[0]=="DataProcessorState"){
             if(parseInt(rsp[1]) == -1){
                 DPInitButton.style.backgroundColor='yellow'
+		DPShutdownButton.style.backgroundColor=''
+		RawEventProcessorStartButton.style.backgroundColor=''
+                RawEventProcessorStopButton.style.backgroundColor=''
                 DPInitButton.disabled = false;
-            }else{
+		DPShutdownButton.disabled = true;
+		RawEventProcessorStartButton.disabled = true;
+                RawEventProcessorStopButton.disabled = true;		
+            }else if(parseInt(rsp[1]) == 0){
                 DPInitButton.style.backgroundColor='#00FF00'
+		DPShutdownButton.style.backgroundColor=''
+		RawEventProcessorStartButton.style.backgroundColor='yellow'
+                RawEventProcessorStopButton.style.backgroundColor=''
                 DPInitButton.disabled = true;
+		DPShutdownButton.disabled = true;
+		RawEventProcessorStartButton.disabled = false;
+                RawEventProcessorStopButton.disabled = true;		
             }
             if(parseInt(rsp[1]) == 2){
-                RawEventProcessorStartButton.style.backgroundColor='#00FF00'
-                RawEventProcessorStartButton.disabled = true;
+                DPInitButton.style.backgroundColor='#00FF00'
+		DPShutdownButton.style.backgroundColor=''
+		RawEventProcessorStartButton.style.backgroundColor='#00FF00'
                 RawEventProcessorStopButton.style.backgroundColor=''
-                RawEventProcessorStopButton.disabled = false;
+                DPInitButton.disabled = true;
+		DPShutdownButton.disabled = true;
+		RawEventProcessorStartButton.disabled = true;
+                RawEventProcessorStopButton.disabled = false;		
             }
             if(parseInt(rsp[1]) == 4){
-                RawEventProcessorStartButton.style.backgroundColor=''
-                RawEventProcessorStartButton.disabled = false;
-                RawEventProcessorStopButton.style.backgroundColor=''
-                RawEventProcessorStopButton.disabled = true;
+                DPInitButton.style.backgroundColor='#00FF00'
+		DPShutdownButton.style.backgroundColor='yellow'
+		RawEventProcessorStartButton.style.backgroundColor=''
+                RawEventProcessorStopButton.style.backgroundColor='red'
+                DPInitButton.disabled = true;
+		DPShutdownButton.disabled = false;
+		RawEventProcessorStartButton.disabled = true;
+                RawEventProcessorStopButton.disabled = true;		
             }
-        }
-        else if(rsp[0]=="NODP"){
-            DPInitButton.disabled = false
         }
     }
 
@@ -908,7 +934,15 @@ function createMsg(data) {
     const hostPortInput = doc.querySelector('#Host_Port');
     const HttpServerPort = document.querySelector('#HttpServerPort');
     HttpServerPort.value = '8008';
-    const storageDir = doc.querySelector('#storageDir');
+    const storageDir = doc.querySelector('#QADataDir');
+    storageDir.value='./output';
+    const ClearButton = doc.querySelector('#QA_Clear');
+    const FirstButton = doc.querySelector('#QA_First');
+    const PreviousButton= doc.querySelector('#QA_Previous');
+    const FileIDInput = doc.querySelector('#QA_FileID');
+    const NextButton = doc.querySelector('#QA_Next');
+    const LastButton = doc.querySelector('#QA_Last');
+    const AutoButton = doc.querySelector('#QA_Auto');
 
     var ws = null
     let userName = 'Client'
@@ -930,6 +964,39 @@ function createMsg(data) {
         ShutdownButton.addEventListener('click',QAProcessorShutdown,false);
         StartButton.addEventListener('click',QAProcessorStart,false);
         StopButton.addEventListener('click',QAProcessorStop,false);
+
+        storageDir.addEventListener('keydown',SetDir,false);
+        ClearButton.addEventListener('click',Clear,false);
+        FirstButton.addEventListener('click',DoFirst,false);
+        PreviousButton.addEventListener('click',DoPrevious,false);
+        FileIDInput.addEventListener('keydown',SetFileID,false);
+        NextButton.addEventListener('click',DoNext,false);
+        LastButton.addEventListener('click',DoLast,false);
+        AutoButton.addEventListener('click',Auto,false);
+    }
+    function SetDir(e){
+        wsSend('setQADir '+storageDir.value);
+    }
+    function Clear(e){
+        wsSend('QAClear');
+    }
+    function DoFirst(e){
+        wsSend('QADoFirst');
+    }
+    function DoPrevious(e){
+        wsSend('QADoPrevious');
+    }
+    function SetFileID(e){
+        wsSend('QADoFile '+FileIDInput.value);
+    }
+    function DoNext(e){
+        wsSend('QADoNext');
+    }
+    function DoLast(e){
+        wsSend('QADoLast');
+    }
+    function Auto(e){
+        wsSend('QASetAuto');
     }
     function QAProcessorShutdown(e){
         wsSend('shutdownQA');
@@ -970,6 +1037,8 @@ function createMsg(data) {
         Buttons.forEach((button) => {
             button.disabled = false;
         });
+	    ConnectionButton.style.backgroundColor = '#00FF00';
+        ConnectionButton.disabled = true;
         InitButton.style.backgroundColor = 'yellow';
         // wsSend('register')
     }
@@ -979,7 +1048,6 @@ function createMsg(data) {
             button.disabled = true;
             button.style.backgroundColor='';
         });
-        InitButton.disabled = false;
         ConnectionButton.disabled = false;
         delete ws;
         ws = null;
@@ -991,7 +1059,6 @@ function createMsg(data) {
             button.disabled = true;
             button.style.backgroundColor='';
         });
-        InitButton.disabled = false;
         ConnectionButton.disabled = false;
         delete ws;
         ws = null;
@@ -1002,39 +1069,95 @@ function createMsg(data) {
         if(rsp[0]=="QATotalEvent"){
             QATotalEventSpan.innerText = parseInt(rsp[1]);
         }
-        if(rsp[0]=="QACurrentEventID"){
+        else if(rsp[0]=="QAFileID"){
+            FileIDInput.value = parseInt(rsp[1]);
+        }
+        else if(rsp[0]=="QAAutoMode"){
+            if(rsp[1] == "-1"){
+                AutoButton.style.backgroundColor='yellow';
+            }else if(rsp[1] == "False"){
+                AutoButton.style.backgroundColor='';
+            }else if(rsp[1]=="True"){
+                AutoButton.style.backgroundColor='#00FF00';
+            }
+        }
+        else if(rsp[0]=="QACurrentEventID"){
             QACurrentEventIDSpan.innerText = parseInt(rsp[1]);
         }
         else if(rsp[0] == "QAState"){
             if(parseInt(rsp[1]) == -1){
-                InitButton.disabled = false;
                 InitButton.style.backgroundColor = 'yellow';
-            }else{
-                InitButton.disabled = true;
-                InitButton.style.backgroundColor = '#00FF00'; 
-            }
-            if(parseInt(rsp[1]) == 2){
-                StartButton.disabled = true;
-                StartButton.style.backgroundColor = '#00FF00';
-                StopButton.disabled = false;
+		        ShutdownButton.style.backgroundColor = '';
+                StartButton.style.backgroundColor = '';
                 StopButton.style.backgroundColor = '';
-            }else if(parseInt(rsp[1]) > 2){
-                StartButton.disabled = false;
-                StartButton.style.backgroundColor = '';
+
+                ClearButton.disabled = true;
+                FirstButton.disabled = true;
+                PreviousButton.disabled = true;
+                NextButton.disabled = true;
+                LastButton.disabled = true;
+
+                AutoButton.disabled = true;
+
+                InitButton.disabled = false;
+		        ShutdownButton.disabled = true;
+                StartButton.disabled = true;
                 StopButton.disabled = true;
-                StopButton.style.backgroundColor = 'Red';
-                setTimeout(reloadQAFram, 2000);
             }else if(parseInt(rsp[1]) == 0){
+                InitButton.style.backgroundColor = '#00FF00';
+		        ShutdownButton.style.backgroundColor = '';
+                StartButton.style.backgroundColor = 'yellow';
+                StopButton.style.backgroundColor = '';
+                
+                ClearButton.disabled = true;
+                FirstButton.disabled = true;
+                PreviousButton.disabled = true;
+                NextButton.disabled = true;
+                LastButton.disabled = true;
+
+                AutoButton.disabled = false;
+                InitButton.disabled = true;
+		        ShutdownButton.disabled = true;
                 StartButton.disabled = false;
+                StopButton.disabled = true;
+            }else if(parseInt(rsp[1]) == 2){
+                InitButton.style.backgroundColor = '#00FF00';
+		        ShutdownButton.style.backgroundColor = '';
+                StartButton.style.backgroundColor = '#00FF00';
+                StopButton.style.backgroundColor = '';
+
+                LastButton.style.backgroundColor = '';
+                ClearButton.disabled = false;
+                FirstButton.disabled = false;
+                PreviousButton.disabled = false;
+                NextButton.disabled = false;
+                LastButton.disabled = false;
+
+                AutoButton.disabled = false;
+                InitButton.disabled = true;
+		        ShutdownButton.disabled = true;
+                StartButton.disabled = true;
+                StopButton.disabled = false;
+
+                //setTimeout(reloadQAFram, 2000);
+            }else if(parseInt(rsp[1]) == 4){
+                InitButton.style.backgroundColor = '#00FF00';
+		        ShutdownButton.style.backgroundColor = 'yellow';
                 StartButton.style.backgroundColor = '';
+                StopButton.style.backgroundColor = 'red';
+                
+                ClearButton.disabled = true;
+                FirstButton.disabled = true;
+                PreviousButton.disabled = true;
+                NextButton.disabled = true;
+                LastButton.disabled = true;
+
+                AutoButton.disabled = true;
+                InitButton.disabled = true;
+		        ShutdownButton.disabled = false;
+                StartButton.disabled = true;
+                StopButton.disabled = true;
             }
-        }
-        else if(rsp[0] == "NOQA"){
-            Buttons.forEach((button) => {
-                // button.disabled = true;
-                button.style.backgroundColor='';
-            });
-            InitButton.disabled = false;
         }
     }
     function dump(){
@@ -1042,6 +1165,8 @@ function createMsg(data) {
         wsSend('getQAState');
         wsSend('getQATotalEvent');
         wsSend('getQACurrentEventID');
+        wsSend('getQAFileID');
+        wsSend('getQAAutoMode');
     }
     setInterval(dump, 1000);
 
@@ -1064,6 +1189,7 @@ function createMsg(data) {
     //===========================Log部分===========================
     const connectionButton = doc.querySelector('#log_connect');
     const createLogButton = doc.querySelector('#createLog');
+    createLogButton.disabled = true;
     const hostAddressInput = doc.querySelector('#Host_IP');
     const hostPortInput = doc.querySelector('#Host_Port');
     const logs = doc.querySelector('#logs');
@@ -1121,7 +1247,8 @@ function createMsg(data) {
         connection = true;
         connectionButton.style.backgroundColor = '#00FF00';
         connectionButton.disabled = true;
-        createLogButton.style.backgroundColor = 'yellow';
+        createLogButton.style.backgroundColor = '';
+        createLogButton.disabled = false;
     }
     function handleClose (e) {
         connection = false;
@@ -1146,9 +1273,11 @@ function createMsg(data) {
         }
         else if(rsp[3] == "INFO"){
             logs.value = e.data;
+            logs.scrollTop = logs.scrollHeight;
         }
         else if(rsp[0] == "noLogger"){
-            createLogButton.style.backgroundColor = 'red';
+            createLogButton.style.backgroundColor = 'yellow';
+            createLogButton.disabled = false;
         }
     }
     function dump(){

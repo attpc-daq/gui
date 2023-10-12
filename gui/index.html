@@ -35,9 +35,7 @@
             <button id="FEE_start">运行</button>
 		    <button id="FEE_stop">停止</button>
             <button id="FEE_data_start">数据开始</button>
-		    <button id="FEE_data_stop">数据停止</button>
-            <button id="FEE_setup">采集配置</button>
-            <button id="FEE_selftrigger">噪声测试</button>
+            <button id="FEE_data_stop">数据停止</button>
             <button id="FEE_start_decoder">打开解码器</button>
             <button id="FEE_stop_decoder">关闭解码器</button>
             <span>Data Rate : </span>
@@ -54,6 +52,11 @@
             </div>
         </div>
         <div class="content">
+            <div>
+                <span>初始化配置: </span>
+                <button id="FEE_setup">采集配置</button>
+                <button id="FEE_selftrigger">噪声测试</button>
+            </div>
             <div>
                 <span>电子学网址: </span>
                 <input type="text" placeholder="SiTCP地址1" id="FEE1_addr">
@@ -239,6 +242,19 @@
             </div>
         </div>
         <div class="content">
+            <div>
+                <span>QAData路径: </span>
+                <input id="QADataDir" type="text" placeholder="文件存储位置"  style="margin-bottom: 5px;width: 500px;">
+            </div>
+            <div>
+                <button id="QA_Clear">清除数据</button>
+                <button id="QA_First">|<</button>
+                <button id="QA_Previous"><<</button>
+                <input id="QA_FileID" type="text" placeholder="文件号"  style="margin-bottom: 5px;width: 100px;">
+                <button id="QA_Next">>></button>
+                <button id="QA_Last">>|</button>
+                <button id="QA_Auto">自动模式</button>
+            </div>
             <div>
                 <span>HttpServerPort:</span>
 		        <input type="text" id="HttpServerPort" placeholder="端口">
