@@ -14,8 +14,8 @@ expandables.forEach((expandable) =>{
             if(frame){
                 content.style.height = "800px";
                 content.style.width = "100%";
-                frame.style.height = "100%";
-                frame.style.width = "100%";
+                frame.style.height = "670px";
+                frame.style.width = "99%";
             }
             isExpanded = true;
         } else {
@@ -68,6 +68,7 @@ expandables.forEach((expandable) =>{
         ws.send(msg);
     }
     function handleOpen (e) {
+	//wsSend('register')
         connection = true;
         shutdownButton.disabled = true;
         shutdownButton.style.backgroundColor = '#00FF00';
@@ -77,7 +78,7 @@ expandables.forEach((expandable) =>{
         if(connection){
             connection = false;
             shutdownButton.disabled = false;
-            shutdownButton.style.backgroundColor = 'yellow';
+            shutdownButton.style.backgroundColor = 'red';
         }
         delete ws;
         ws = null;
@@ -91,7 +92,7 @@ expandables.forEach((expandable) =>{
     }
     function handleMessage (e) {
         var rsp = e.data.split(" ");
-        console.log(rsp);
+        //console.log(rsp);
     }
     init()
 })(document);
@@ -347,7 +348,7 @@ expandables.forEach((expandable) =>{
 	feeConnectionButton.style.backgroundColor = '#00FF00';
         feeConnectionButton.disabled = true;
         feeInitButton.style.backgroundColor = 'yellow';
-        // wsSend('register')
+        wsSend('register')
     }
     function handleClose (e) {
         connection = false;
@@ -383,16 +384,16 @@ expandables.forEach((expandable) =>{
         if(rsp[0]=="dataRate1"){
             dataRateSpan1.innerText = parseFloat(rsp[1]).toFixed(2);
         }
-        else if(rsp[0]=="initSitcp"){
-            if(rsp[1]=='Done'){
-                console.log("initSitcp Done");
-            }
-        }
-        else if(rsp[0]=="shutdownSiTCP"){
-            if(rsp[1]=='Done'){
-                console.log("shutdownSiTCP Done");
-            }
-        }
+        //else if(rsp[0]=="initSitcp"){
+        //    if(rsp[1]=='Done'){
+        //        console.log("initSitcp Done");
+        //    }
+        //}
+        //else if(rsp[0]=="shutdownSiTCP"){
+        //    if(rsp[1]=='Done'){
+        //        console.log("shutdownSiTCP Done");
+        //    }
+        //}
         else if(rsp[0]=="SiTCPState"){
             if(parseInt(rsp[1])==-1 && parseInt(rsp[2])==-1){
                 feeInitButton.style.backgroundColor = 'yellow';
@@ -805,7 +806,7 @@ expandables.forEach((expandable) =>{
         DPConnectionButton.style.backgroundColor = '#00FF00';
         DPConnectionButton.disabled=true;
         DPInitButton.style.backgroundColor = 'yellow';
-        // wsSend('register')
+        wsSend('register')
     }
     function handleClose (e) {
         connection = false;
@@ -936,13 +937,20 @@ expandables.forEach((expandable) =>{
     HttpServerPort.value = '8008';
     const storageDir = doc.querySelector('#QADataDir');
     storageDir.value='./output';
-    const ClearButton = doc.querySelector('#QA_Clear');
-    const FirstButton = doc.querySelector('#QA_First');
-    const PreviousButton= doc.querySelector('#QA_Previous');
+    const ClearPlotsButton = doc.querySelector('#QA_ClearPlots');
+    const FirstFileButton = doc.querySelector('#QA_FirstFile');
+    const PreviousFileButton= doc.querySelector('#QA_PreviousFile');
     const FileIDInput = doc.querySelector('#QA_FileID');
-    const NextButton = doc.querySelector('#QA_Next');
-    const LastButton = doc.querySelector('#QA_Last');
-    const AutoButton = doc.querySelector('#QA_Auto');
+    const NextFileButton = doc.querySelector('#QA_NextFile');
+    const LastFileButton = doc.querySelector('#QA_LastFile');
+    const AutoFileButton = doc.querySelector('#QA_AutoFile');
+
+    const FirstEventButton = doc.querySelector('#QA_FirstEvent');
+    const PreviousEventButton= doc.querySelector('#QA_PreviousEvent');
+    const EventEntryIDInput = doc.querySelector('#QA_EventEntryID');
+    const NextEventButton = doc.querySelector('#QA_NextEvent');
+    const LastEventButton = doc.querySelector('#QA_LastEvent');
+    //const AutoEventButton = doc.querySelector('#QA_AutoEvent');
 
     var ws = null
     let userName = 'Client'
@@ -954,7 +962,7 @@ expandables.forEach((expandable) =>{
             let arr =  str.split('&')
             userName = arr[0].split('=')[1]
             passWord = arr[1].split('=')[1]
-            console.log('userNamepassWord', userName, passWord)
+            //console.log('userNamepassWord', userName, passWord)
         }
 	    bindEvent()
     }
@@ -966,38 +974,67 @@ expandables.forEach((expandable) =>{
         StopButton.addEventListener('click',QAProcessorStop,false);
 
         storageDir.addEventListener('keydown',SetDir,false);
-        ClearButton.addEventListener('click',Clear,false);
-        FirstButton.addEventListener('click',DoFirst,false);
-        PreviousButton.addEventListener('click',DoPrevious,false);
+
+        ClearPlotsButton.addEventListener('click',ClearPlots,false);
+
+        FirstFileButton.addEventListener('click',DoFirstFile,false);
+        PreviousFileButton.addEventListener('click',DoPreviousFile,false);
         FileIDInput.addEventListener('keydown',SetFileID,false);
-        NextButton.addEventListener('click',DoNext,false);
-        LastButton.addEventListener('click',DoLast,false);
-        AutoButton.addEventListener('click',Auto,false);
+        NextFileButton.addEventListener('click',DoNextFile,false);
+        LastFileButton.addEventListener('click',DoLastFile,false);
+        AutoFileButton.addEventListener('click',AutoFile,false);
+
+        FirstEventButton.addEventListener('click',DoFirstEvent,false);
+        PreviousEventButton.addEventListener('click',DoPreviousEvent,false);
+        EventEntryIDInput.addEventListener('keydown',SetEventEntryID,false);
+        NextEventButton.addEventListener('click',DoNextEvent,false);
+        LastEventButton.addEventListener('click',DoLastEvent,false);
+        //AutoEventButton.addEventListener('click',AutoEvent,false);
     }
     function SetDir(e){
         wsSend('setQADir '+storageDir.value);
     }
-    function Clear(e){
-        wsSend('QAClear');
+    function ClearPlots(e){
+        wsSend('QAClearPlots');
     }
-    function DoFirst(e){
-        wsSend('QADoFirst');
+    function DoFirstFile(e){
+        wsSend('QADoFirstFile');
     }
-    function DoPrevious(e){
-        wsSend('QADoPrevious');
+    function DoPreviousFile(e){
+        wsSend('QADoPreviousFile');
     }
     function SetFileID(e){
         wsSend('QADoFile '+FileIDInput.value);
     }
-    function DoNext(e){
-        wsSend('QADoNext');
+    function DoNextFile(e){
+        wsSend('QADoNextFile');
     }
-    function DoLast(e){
-        wsSend('QADoLast');
+    function DoLastFile(e){
+        wsSend('QADoLastFile');
     }
-    function Auto(e){
-        wsSend('QASetAuto');
+    function AutoFile(e){
+        wsSend('QASetAutoFile');
     }
+
+    function DoFirstEvent(e){
+        wsSend('QADoFirstEvent');
+    }
+    function DoPreviousEvent(e){
+        wsSend('QADoPreviousEvent');
+    }
+    function SetEventEntryID(e){
+        wsSend('QADoEvent '+EventEntryIDInput.value);
+    }
+    function DoNextEvent(e){
+        wsSend('QADoNextEvent');
+    }
+    function DoLastEvent(e){
+        wsSend('QADoLastEvent');
+    }
+    //function AutoEvent(e){
+    //    wsSend('QASetAutoEvent');
+    //}
+
     function QAProcessorShutdown(e){
         wsSend('shutdownQA');
     }
@@ -1040,7 +1077,7 @@ expandables.forEach((expandable) =>{
 	    ConnectionButton.style.backgroundColor = '#00FF00';
         ConnectionButton.disabled = true;
         InitButton.style.backgroundColor = 'yellow';
-        // wsSend('register')
+        wsSend('register')
     }
     function handleClose (e) {
         connection = false;
@@ -1072,22 +1109,34 @@ expandables.forEach((expandable) =>{
         else if(rsp[0]=="QAFileID"){
             FileIDInput.value = parseInt(rsp[1]);
         }
-        else if(rsp[0]=="QAAutoMode"){
+        else if(rsp[0]=="QAAutoFileMode"){
             if(rsp[1] == "-1"){
-                AutoButton.style.backgroundColor='yellow';
+                AutoFileButton.style.backgroundColor='yellow';
             }else if(rsp[1] == "False"){
-                AutoButton.style.backgroundColor='';
+                AutoFileButton.style.backgroundColor='';
             }else if(rsp[1]=="True"){
-                AutoButton.style.backgroundColor='#00FF00';
+                AutoFileButton.style.backgroundColor='#00FF00';
             }
         }
+        //else if(rsp[0]=="QAAutoEventMode"){
+        //    if(rsp[1] == "-1"){
+        //        AutoEventButton.style.backgroundColor='yellow';
+        //    }else if(rsp[1] == "False"){
+        //        AutoEventButton.style.backgroundColor='';
+        //    }else if(rsp[1]=="True"){
+        //        AutoEventButton.style.backgroundColor='#00FF00';
+        //    }
+        //}
         else if(rsp[0]=="QACurrentEventID"){
             QACurrentEventIDSpan.innerText = parseInt(rsp[1]);
+        }
+        else if(rsp[0]=="QAEventEntryID"){
+            EventEntryIDInput.value = parseInt(rsp[1]);
         }
         else if(rsp[0] == "QAState"){
             if(parseInt(rsp[1]) == -1){
                 InitButton.style.backgroundColor = 'yellow';
-		        ShutdownButton.style.backgroundColor = '';
+		ShutdownButton.style.backgroundColor = '';
                 StartButton.style.backgroundColor = '';
                 StopButton.style.backgroundColor = '';
 
@@ -1100,12 +1149,12 @@ expandables.forEach((expandable) =>{
                 AutoButton.disabled = true;
 
                 InitButton.disabled = false;
-		        ShutdownButton.disabled = true;
+		ShutdownButton.disabled = true;
                 StartButton.disabled = true;
                 StopButton.disabled = true;
             }else if(parseInt(rsp[1]) == 0){
                 InitButton.style.backgroundColor = '#00FF00';
-		        ShutdownButton.style.backgroundColor = '';
+		ShutdownButton.style.backgroundColor = '';
                 StartButton.style.backgroundColor = 'yellow';
                 StopButton.style.backgroundColor = '';
                 
@@ -1117,12 +1166,12 @@ expandables.forEach((expandable) =>{
 
                 AutoButton.disabled = false;
                 InitButton.disabled = true;
-		        ShutdownButton.disabled = true;
+		ShutdownButton.disabled = true;
                 StartButton.disabled = false;
                 StopButton.disabled = true;
             }else if(parseInt(rsp[1]) == 2){
                 InitButton.style.backgroundColor = '#00FF00';
-		        ShutdownButton.style.backgroundColor = '';
+		ShutdownButton.style.backgroundColor = '';
                 StartButton.style.backgroundColor = '#00FF00';
                 StopButton.style.backgroundColor = '';
 
@@ -1135,14 +1184,14 @@ expandables.forEach((expandable) =>{
 
                 AutoButton.disabled = false;
                 InitButton.disabled = true;
-		        ShutdownButton.disabled = true;
+		ShutdownButton.disabled = true;
                 StartButton.disabled = true;
                 StopButton.disabled = false;
 
                 //setTimeout(reloadQAFram, 2000);
             }else if(parseInt(rsp[1]) == 4){
                 InitButton.style.backgroundColor = '#00FF00';
-		        ShutdownButton.style.backgroundColor = 'yellow';
+		ShutdownButton.style.backgroundColor = 'yellow';
                 StartButton.style.backgroundColor = '';
                 StopButton.style.backgroundColor = 'red';
                 
@@ -1154,7 +1203,7 @@ expandables.forEach((expandable) =>{
 
                 AutoButton.disabled = true;
                 InitButton.disabled = true;
-		        ShutdownButton.disabled = false;
+		ShutdownButton.disabled = false;
                 StartButton.disabled = true;
                 StopButton.disabled = true;
             }
@@ -1166,7 +1215,9 @@ expandables.forEach((expandable) =>{
         wsSend('getQATotalEvent');
         wsSend('getQACurrentEventID');
         wsSend('getQAFileID');
-        wsSend('getQAAutoMode');
+        wsSend('getQAEventEntryID');
+        wsSend('getQAAutoFileMode');
+        //wsSend('getQAAutoEventMode');
     }
     setInterval(dump, 1000);
 
@@ -1249,11 +1300,14 @@ expandables.forEach((expandable) =>{
         connectionButton.disabled = true;
         createLogButton.style.backgroundColor = '';
         createLogButton.disabled = false;
+	wsSend('register')
     }
     function handleClose (e) {
         connection = false;
         connectionButton.style.backgroundColor = '';
         connectionButton.disabled = false;
+        createLogButton.style.backgroundColor = '';
+        createLogButton.disabled = true;
         delete ws;
         ws = null;
     }
@@ -1261,6 +1315,8 @@ expandables.forEach((expandable) =>{
         connection = false;
         connectionButton.style.backgroundColor = '';
         connectionButton.disabled = false;
+        createLogButton.style.backgroundColor = '';
+        createLogButton.disabled = true;
         delete ws;
         ws = null;
     }

@@ -247,17 +247,26 @@
                 <input id="QADataDir" type="text" placeholder="文件存储位置"  style="margin-bottom: 5px;width: 500px;">
             </div>
             <div>
-                <button id="QA_Clear">清除数据</button>
-                <button id="QA_First">|<</button>
-                <button id="QA_Previous"><<</button>
-                <input id="QA_FileID" type="text" placeholder="文件号"  style="margin-bottom: 5px;width: 100px;">
-                <button id="QA_Next">>></button>
-                <button id="QA_Last">>|</button>
-                <button id="QA_Auto">自动模式</button>
+                <span>文件操作：</span>
+                <button id="QA_FirstFile">|<</button>
+                <button id="QA_PreviousFile"><<</button>
+                <input id="QA_FileID" type="text" style="margin-bottom: 5px;width: 100px;">
+                <button id="QA_NextFile">>></button>
+                <button id="QA_LastFile">>|</button>
+                <button id="QA_AutoFile">自动模式</button>
+            </div>
+            <div>
+                <span>事件操作：</span>
+                <button id="QA_FirstEvent">|<</button>
+                <button id="QA_PreviousEvent"><<</button>
+                <input id="QA_EventEntryID" type="text" style="margin-bottom: 5px;width: 100px;">
+                <button id="QA_NextEvent">>></button>
+                <button id="QA_LastEvent">>|</button>
             </div>
             <div>
                 <span>HttpServerPort:</span>
 		        <input type="text" id="HttpServerPort" placeholder="端口">
+                <button id="QA_ClearPlots">清除数据</button>
             </div>
             <iframe class="frame" id="QAFrame" src="http://10.155.101.208:8008/"></iframe>
         </div>
